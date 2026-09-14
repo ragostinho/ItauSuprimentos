@@ -1,0 +1,1840 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blueprint de Arquitetura Salesforce — Itaú Suprimentos</title>
+  <style>
+    :root {
+      --itau-orange: #EC7000;
+      --itau-blue: #003DA5;
+      --itau-dark: #1A1A2E;
+      --bg: #F4F6FA;
+      --card: #FFFFFF;
+      --text: #1C1C1E;
+      --text-secondary: #6B6B6B;
+      --border: #E2E8F0;
+      --success: #22C55E;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+      --info: #3B82F6;
+      --radius: 12px;
+      --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); }
+
+    /* HEADER */
+    .header {
+      background: linear-gradient(135deg, var(--itau-blue) 0%, #001f6b 100%);
+      color: white;
+      padding: 32px 48px 28px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .header-left h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.3px; }
+    .header-left p { font-size: 14px; opacity: 0.75; margin-top: 4px; }
+    .header-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .badge {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .badge.orange { background: rgba(236,112,0,0.35); border-color: var(--itau-orange); }
+    .header-kpis { display: flex; gap: 20px; }
+    .kpi { text-align: center; }
+    .kpi-num { font-size: 28px; font-weight: 800; color: var(--itau-orange); line-height: 1; }
+    .kpi-label { font-size: 11px; opacity: 0.7; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* NAV */
+    .nav {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      overflow-x: auto;
+      padding: 0 48px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .nav a {
+      text-decoration: none;
+      color: var(--text-secondary);
+      padding: 14px 18px;
+      font-size: 13px;
+      font-weight: 500;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .nav a:hover { color: var(--itau-blue); border-color: var(--itau-blue); }
+    .nav a.active { color: var(--itau-blue); border-color: var(--itau-orange); font-weight: 600; }
+
+    /* MAIN */
+    .main { max-width: 1200px; margin: 0 auto; padding: 40px 48px 80px; }
+
+    /* SECTION */
+    .section { margin-bottom: 60px; scroll-margin-top: 60px; }
+    .section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+    .section-icon {
+      width: 36px; height: 36px;
+      background: var(--itau-blue);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 16px; flex-shrink: 0;
+    }
+    .section-header h2 { font-size: 20px; font-weight: 700; color: var(--itau-dark); }
+    .section-header p { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+
+    /* CARDS */
+    .cards { display: grid; gap: 16px; }
+    .cards-2 { grid-template-columns: repeat(2, 1fr); }
+    .cards-3 { grid-template-columns: repeat(3, 1fr); }
+    .cards-4 { grid-template-columns: repeat(4, 1fr); }
+    @media(max-width: 900px) { .cards-2, .cards-3, .cards-4 { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--itau-blue);
+      margin-bottom: 8px;
+    }
+    .card-body { font-size: 14px; color: var(--text); line-height: 1.6; }
+    .card-tag {
+      display: inline-block;
+      background: #EBF2FF;
+      color: var(--itau-blue);
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+    .card-tag.warning { background: #FFF7E6; color: #B45309; }
+    .card-tag.success { background: #ECFDF5; color: #15803D; }
+    .card-tag.danger { background: #FEF2F2; color: #B91C1C; }
+
+    /* ADR cards */
+    .adr-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .adr-header {
+      background: linear-gradient(90deg, var(--itau-blue) 0%, #1a50c8 100%);
+      color: white;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .adr-num {
+      background: var(--itau-orange);
+      border-radius: 6px;
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 13px;
+    }
+    .adr-header-title { font-size: 14px; font-weight: 700; }
+    .adr-body { padding: 20px; }
+    .adr-row { margin-bottom: 12px; }
+    .adr-row:last-child { margin-bottom: 0; }
+    .adr-row-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      color: var(--text-secondary); letter-spacing: 0.5px; margin-bottom: 3px;
+    }
+    .adr-row-value { font-size: 13px; color: var(--text); line-height: 1.5; }
+    .adr-row-value.decision { color: var(--itau-blue); font-weight: 600; }
+    .adr-row-value.tradeoff { color: #B45309; }
+
+    /* TABLES */
+    .table-wrap { overflow-x: auto; border-radius: var(--radius); box-shadow: var(--shadow); }
+    table { width: 100%; border-collapse: collapse; background: var(--card); font-size: 13px; }
+    thead th {
+      background: var(--itau-blue);
+      color: white;
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    thead th:first-child { border-radius: 12px 0 0 0; }
+    thead th:last-child { border-radius: 0 12px 0 0; }
+    tbody tr { border-bottom: 1px solid var(--border); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #F8FAFF; }
+    tbody td { padding: 11px 16px; vertical-align: top; line-height: 1.5; }
+    td code {
+      background: #EBF2FF; color: var(--itau-blue);
+      padding: 2px 6px; border-radius: 4px; font-size: 12px; font-family: monospace;
+    }
+
+    /* DIAGRAM */
+    .diagram {
+      background: #0F172A;
+      color: #E2E8F0;
+      border-radius: var(--radius);
+      padding: 24px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.8;
+      overflow-x: auto;
+    }
+    .diagram .comment { color: #64748B; }
+    .diagram .box { color: #93C5FD; }
+    .diagram .arrow { color: #F97316; }
+    .diagram .label { color: #86EFAC; }
+
+    /* TIMELINE */
+    .timeline { display: flex; gap: 0; }
+    .timeline-item {
+      flex: 1;
+      position: relative;
+    }
+    .timeline-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 24px;
+      right: -1px;
+      width: 2px;
+      height: calc(100% - 48px);
+      background: var(--border);
+    }
+    .timeline-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--itau-orange);
+      border: 2px solid var(--itau-blue);
+      margin: 18px auto 12px;
+    }
+    .timeline-label {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--itau-blue);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .timeline-content {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin: 8px 4px;
+      box-shadow: var(--shadow);
+    }
+    .timeline-content h4 { font-size: 13px; font-weight: 700; color: var(--itau-dark); margin-bottom: 6px; }
+    .timeline-content ul { list-style: none; }
+    .timeline-content li { font-size: 12px; color: var(--text-secondary); padding: 2px 0; }
+    .timeline-content li::before { content: '→ '; color: var(--itau-orange); font-weight: 700; }
+    .timeline-dep {
+      background: #FFF7E6;
+      border: 1px solid #FDE68A;
+      border-radius: 6px;
+      padding: 6px 10px;
+      margin-top: 8px;
+      font-size: 11px;
+      color: #B45309;
+    }
+
+    /* RISK ITEMS */
+    .risk-list { display: flex; flex-direction: column; gap: 10px; }
+    .risk-item {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+    }
+    .risk-level {
+      width: 52px; height: 52px; flex-shrink: 0;
+      border-radius: 10px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .risk-level.blocker { background: #FEF2F2; color: #EF4444; }
+    .risk-level.high { background: #FFF7E6; color: #F59E0B; }
+    .risk-level.medium { background: #EBF2FF; color: var(--itau-blue); }
+    .risk-label { font-size: 9px; font-weight: 700; text-transform: uppercase; margin-top: 1px; }
+    .risk-content h4 { font-size: 13px; font-weight: 700; color: var(--itau-dark); margin-bottom: 4px; }
+    .risk-content p { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+    .risk-content .resp { font-size: 11px; color: var(--itau-blue); font-weight: 600; margin-top: 4px; }
+
+    /* CHIP TAGS */
+    .chip {
+      display: inline-block;
+      background: #EBF2FF; color: var(--itau-blue);
+      border-radius: 12px; padding: 3px 10px;
+      font-size: 11px; font-weight: 600; margin: 2px;
+    }
+    .chip.orange { background: #FFF0E0; color: var(--itau-orange); }
+    .chip.green { background: #ECFDF5; color: #15803D; }
+    .chip.gray { background: #F1F5F9; color: #475569; }
+
+    /* FLOW TABLE */
+    .flow-table td:first-child { font-family: monospace; font-size: 12px; color: var(--itau-blue); font-weight: 600; }
+
+    /* LICENSE TABLE */
+    .lic-big { font-size: 22px; font-weight: 800; color: var(--itau-blue); }
+
+    /* AI ROADMAP */
+    .ai-phase { display: flex; gap: 12px; margin-bottom: 12px; }
+    .ai-phase-num {
+      width: 32px; height: 32px; flex-shrink: 0;
+      background: var(--itau-blue); color: white;
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 13px;
+    }
+    .ai-phase-content h4 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .ai-phase-content p { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+
+    /* LIMITS TABLE */
+    .limit-high td { background: #FEF2F2 !important; }
+    .limit-medium td { background: #FFF7E6 !important; }
+    .limit-low td { background: #ECFDF5 !important; }
+
+    /* OBJECT HIERARCHY */
+    .obj-tree {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      font-family: monospace;
+      font-size: 13px;
+      line-height: 2;
+      box-shadow: var(--shadow);
+    }
+    .obj-tree .obj-root { color: var(--itau-blue); font-weight: 700; font-size: 14px; }
+    .obj-tree .obj-child { color: #1A50C8; padding-left: 20px; }
+    .obj-tree .obj-leaf { color: #475569; padding-left: 40px; font-size: 12px; }
+    .obj-tree .obj-note { color: #94A3B8; font-size: 11px; }
+
+    /* PERMISSION GRID */
+    .perm-grid {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .perm-grid table th { background: var(--itau-blue); }
+    .perm-yes { color: #15803D; font-weight: 700; text-align: center; }
+    .perm-no { color: #DC2626; text-align: center; }
+    .perm-partial { color: #D97706; font-weight: 600; text-align: center; }
+
+    /* FOOTER */
+    .footer {
+      background: var(--itau-dark);
+      color: rgba(255,255,255,0.5);
+      text-align: center;
+      padding: 20px;
+      font-size: 12px;
+    }
+
+    /* UTILS */
+    .divider { height: 1px; background: var(--border); margin: 32px 0; }
+    .note {
+      background: #EBF2FF; border-left: 3px solid var(--itau-blue);
+      border-radius: 0 8px 8px 0; padding: 12px 16px;
+      font-size: 13px; color: var(--text); margin: 16px 0;
+    }
+    .note strong { color: var(--itau-blue); }
+    .warning-note {
+      background: #FFF7E6; border-left: 3px solid var(--itau-orange);
+      border-radius: 0 8px 8px 0; padding: 12px 16px;
+      font-size: 13px; color: var(--text); margin: 16px 0;
+    }
+    .warning-note strong { color: var(--itau-orange); }
+    .mb-16 { margin-bottom: 16px; }
+    .mb-24 { margin-bottom: 24px; }
+    .mt-16 { margin-top: 16px; }
+
+    /* SCOPE PILLS */
+    .scope-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .scope-box {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .scope-box.in { border-top: 3px solid var(--success); }
+    .scope-box.out { border-top: 3px solid #CBD5E1; }
+    .scope-box h4 { font-size: 13px; font-weight: 700; margin-bottom: 12px; color: var(--itau-dark); }
+    .scope-box ul { list-style: none; }
+    .scope-box li { font-size: 13px; padding: 4px 0; display: flex; gap: 8px; align-items: flex-start; }
+    .scope-box li::before { font-weight: 700; flex-shrink: 0; }
+    .scope-box.in li::before { content: '✓'; color: var(--success); }
+    .scope-box.out li::before { content: '○'; color: #94A3B8; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <div style="font-size:12px;opacity:0.6;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Itaú Suprimentos · Salesforce</div>
+    <h1>Blueprint de Arquitetura Salesforce</h1>
+    <p>Módulo de Acompanhamento de Compras — Fase 1</p>
+    <div class="header-badges">
+      <span class="badge">v1.0 · 2026-09-10</span>
+      <span class="badge orange">Aprovado para planejamento</span>
+      <span class="badge">Horizonte sugerido: 6 meses</span>
+    </div>
+  </div>
+  <div class="header-kpis">
+    <div class="kpi"><div class="kpi-num">835</div><div class="kpi-label">emails/mês</div></div>
+    <div class="kpi"><div class="kpi-num">35%</div><div class="kpi-label">horas manuais</div></div>
+    <div class="kpi"><div class="kpi-num">~90</div><div class="kpi-label">fornecedores</div></div>
+    <div class="kpi"><div class="kpi-num">1.000+</div><div class="kpi-label">SKUs</div></div>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="#visao-geral" class="active">Visão Geral</a>
+  <a href="#decisoes">Decisões</a>
+  <a href="#modelo-dados">Modelo de Dados</a>
+  <a href="#integracoes">Integrações</a>
+  <a href="#automacao">Automação</a>
+  <a href="#portal">Portal</a>
+  <a href="#portal-opcoes">Portal Reservas</a>
+  <a href="#perfis">Perfis &amp; Acessos</a>
+  <a href="#licencas">Licenças</a>
+  <a href="#soe">Mesa S&amp;OE</a>
+  <a href="#ia">IA &amp; Einstein</a>
+  <a href="#faseamento">Faseamento</a>
+  <a href="#dependencias">Dependências</a>
+  <a href="#limites">Limits &amp; Riscos</a>
+</nav>
+
+<main class="main">
+
+  <!-- ===== VISÃO GERAL ===== -->
+  <section class="section" id="visao-geral">
+    <div class="section-header">
+      <div class="section-icon">🎯</div>
+      <div>
+        <h2>Visão Geral</h2>
+        <p>Posicionamento do Salesforce no ecossistema de Suprimentos</p>
+      </div>
+    </div>
+
+    <div class="cards cards-3 mb-24">
+      <div class="card">
+        <div class="card-title">Principais dores quantificadas</div>
+        <div class="card-body" style="font-size:12px;">
+          <p style="margin-bottom:6px;"><strong>25h/mês por analista</strong> — acionamentos manuais via email/ligação</p>
+          <p style="margin-bottom:6px;"><strong>Robô de acionamento</strong> com histórico de falha — nenhuma confiabilidade</p>
+          <p style="margin-bottom:6px;"><strong>~835 emails/mês</strong> de follow-up — sem rastreabilidade</p>
+          <p style="margin-bottom:6px;"><strong>~100 fornecedores</strong> sem visão de volume firme para negociação</p>
+          <p><strong>Portais de reversa e descarte</strong> desconectados — operação onerosa</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Papel do Salesforce</div>
+        <div class="card-body">
+          <strong>Fase 1 — Compras:</strong> portal de tracking + fornecedores<br>
+          <strong>Fase 2 — S&OE:</strong> interface de decisão integrada ao OMS [AWS]<br><br>
+          <span style="font-size:12px;color:var(--text-secondary);">Salesforce <u>não é</u> o OMS computacional (AWS) — é a camada de negócio e visibilidade</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">O que o SF não substitui</div>
+        <div class="card-body" style="font-size:12px;">
+          <p style="margin-bottom:5px;"><strong>SAP ECC [ERP]</strong> — registro de POs (fonte da verdade)</p>
+          <p style="margin-bottom:5px;"><strong>OMS [AWS]</strong> — motor de priorização e stock (em construção)</p>
+          <p style="margin-bottom:5px;"><strong>WMS Itaú [AWS]</strong> — estoque lógico (em construção)</p>
+          <p style="margin-bottom:5px;"><strong>Sistema AGV</strong> — estoque físico em Cajamar</p>
+          <p><strong>TMS [AWS] + Gerador DC-e [AWS]</strong> — transporte</p>
+          <p style="margin-top:6px;font-size:11px;color:var(--text-secondary);">Integração com todos via <strong>DigiBee</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="note mb-24">
+      <strong>Arquitetura de sistemas (C1 — v20260911):</strong> Portal Reservas [AWS/360i] → <strong>OMS [AWS]</strong> ↔ WMS Itaú [AWS] ↔ Sistema AGV → <strong>TMS [AWS]</strong> → Transportadoras → Entrega na agência.<br>
+      <strong>Salesforce neste contexto:</strong> Responde à pergunta aberta do TO-BE (<em>"Qual portal para acompanhar a compra do material?"</em>) — atua como portal de compras (Fase 1) e interface da Mesa de Decisão S&OE integrada ao OMS [AWS] (Fase 2).
+    </div>
+
+    <div class="cards cards-3 mb-24" style="grid-template-columns:1fr 1fr;">
+      <div class="card" style="border-left:3px solid var(--itau-orange);">
+        <div class="card-title">Sistemas upstream do Portal de Reservas</div>
+        <div class="card-body" style="font-size:12px;">
+          <p style="margin-bottom:5px;"><strong>EAM — Attune</strong> — catálogo de SKU, inventário agências, lista de material (Revit). Gerenciado pela área <strong>GIMEA</strong></p>
+          <p style="margin-bottom:5px;"><strong>[Orquestrador]</strong> — cronograma de obras, <strong>Código UPE</strong> (identificador único da obra), código orçamentário</p>
+          <p style="margin-bottom:5px;"><strong>[Motor Alocação]</strong> — define qual fabricante produz cada SKU</p>
+          <p><strong>[Rainbow/Parcerias]</strong> — habilitação de terceiros (relevante para acesso ao portal SF)</p>
+          <div style="margin-top:8px;font-size:11px;color:var(--text-secondary);">Alimentam o portal Angular na Fase 1 — enriquecerão os registros SF na Fase 2</div>
+        </div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--itau-orange);">
+        <div class="card-title">Atores e transações SAP</div>
+        <div class="card-body" style="font-size:12px;">
+          <p style="margin-bottom:5px;"><strong>SETA Obras</strong> — ME51N (não estocado) / CN22 (estocado)</p>
+          <p style="margin-bottom:5px;"><strong>GIMEA / SETA Manutenção</strong> — MB21 (equipamentos) / W31 (abertura OS) / W32 (alteração OS)</p>
+          <p style="margin-bottom:5px;"><strong>Agenda S&OE</strong> — resolve dilemas de atendimento (reunião semanal)</p>
+          <div style="margin-top:8px;font-size:11px;color:var(--text-secondary);">Transações SAP devem constar no payload DigiBee para rastreabilidade</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mapa de sistemas C1 -->
+    <h3 style="font-size:14px;font-weight:700;color:var(--itau-dark);margin-bottom:12px;">Mapa de sistemas — Diagrama C1 (v20260911)</h3>
+    <div class="cards cards-3 mb-24" style="grid-template-columns:repeat(3,1fr);">
+      <div class="card" style="border-left:3px solid #94A3B8;">
+        <div class="card-title" style="color:#64748B;">Sistemas Itaú [AWS]</div>
+        <div class="card-body" style="font-size:12px;">
+          <p style="margin-bottom:4px;"><strong>Portal de Reservas</strong> [AWS / 360i] — fiscais</p>
+          <p style="margin-bottom:4px;"><strong>OMS</strong> [AWS] — motor priorização (em construção)</p>
+          <p style="margin-bottom:4px;"><strong>WMS Itaú</strong> [AWS] — estoque lógico (em construção)</p>
+          <p style="margin-bottom:4px;"><strong>TMS</strong> [AWS] — transporte (em construção)</p>
+          <p><strong>Gerador de DC-e</strong> [AWS] — documento de transporte</p>
+          <div style="margin-top:8px;font-size:11px;color:var(--itau-orange);">⚡ Questão aberta: baixa no SAP — quando?</div>
+        </div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--itau-blue);">
+        <div class="card-title"><span style="color:var(--itau-blue);">✦</span> Salesforce (este blueprint)</div>
+        <div class="card-body" style="font-size:12px;">
+          <p style="margin-bottom:4px;"><strong>Fase 1:</strong> tracking de compras + portal fornecedor</p>
+          <p style="margin-bottom:4px;"><strong>Fase 2:</strong> interface S&OE + Mesa de Decisão</p>
+          <p style="margin-bottom:4px;"><strong>Usuários:</strong> analistas PCTec, Itaú, GIMEA, coordenadores + fornecedores (EC)</p>
+          <p style="margin-bottom:4px;"><strong>Integração:</strong> DigiBee ↔ SAP, AGV, OMS</p>
+          <div style="margin-top:8px;font-size:11px;color:var(--success);">✅ Resposta para: "Qual portal para acompanhar a compra?"</div>
+        </div>
+      </div>
+      <div class="card" style="border-left:3px solid #94A3B8;">
+        <div class="card-title" style="color:#64748B;">Sistemas externos</div>
+        <div class="card-body" style="font-size:12px;">
+          <p style="margin-bottom:4px;"><strong>SAP ECC</strong> [ERP] — POs, reservas SAP</p>
+          <p style="margin-bottom:4px;"><strong>Sistema AGV</strong> — WMS físico, Cajamar</p>
+          <p style="margin-bottom:4px;"><strong>Transportadoras</strong> — Intelpo (homologada)</p>
+          <p style="margin-bottom:4px;"><strong>Rainbow/Parcerias</strong> — habilitação de terceiros</p>
+          <p style="margin-bottom:4px;"><strong>EAM — Attune</strong> — gestão de ativos (GIMEA)</p>
+          <p><strong>Motor Alocação</strong> — designa fabricante por SKU</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="scope-grid">
+    <h3 style="font-size:14px;font-weight:700;color:var(--itau-dark);margin-bottom:12px;margin-top:24px;">7 tipos de demanda — classificação oficial do projeto</h3>
+    <div class="table-wrap mb-24">
+      <table>
+        <thead><tr><th>#</th><th>Tipo</th><th>Fluxo</th><th>Fase SF</th></tr></thead>
+        <tbody>
+          <tr><td><strong>1</strong></td><td>Reservas de obras</td><td>Puxado / sob demanda — fiscal registra intenção + data estimada</td><td><span class="chip green">Fase 2</span></td></tr>
+          <tr><td><strong>2</strong></td><td>Reservas de manutenção</td><td>Empurrado / estoque mínimo — equipe ou gerente da agência</td><td><span class="chip green">Fase 2</span></td></tr>
+          <tr><td><strong>3</strong></td><td>Reserva com reversa</td><td>Ex: substituição de ATM — entrega + retirada no mesmo projeto</td><td><span class="chip green">Fase 2</span></td></tr>
+          <tr><td><strong>4</strong></td><td>Reversa pura (encerramento/redução)</td><td>Retirada total de agência encerrada — sem motor de priorização de entrega</td><td><span class="chip green">Fase 2</span></td></tr>
+          <tr><td><strong>5</strong></td><td>Reversa pura (dia a dia)</td><td>Materiais avariados — gerente solicita retirada pontual via SLA</td><td><span class="chip green">Fase 2</span></td></tr>
+          <tr><td><strong>6</strong></td><td>Reversa por insucesso</td><td>Material entregue com avaria — devolução + reabertura do ciclo de compra</td><td><span class="chip green">Fase 2</span></td></tr>
+          <tr><td><strong>7</strong></td><td>Emergencial</td><td>Bypassa motor de priorização — vai direto ao TMS sem janela de congelamento</td><td><span class="chip green">Fase 2</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note mb-24">
+      <strong>Status oficiais de uma Reserva</strong> (TO-BE v20260911):<br>
+      <code>Intenção</code> → <code>Acionada</code> → <code>Congelada</code> → <code>Priorizada</code> → <code>Enviada</code> (fluxo normal)<br>
+      <code>Congelada</code> → <code>Despriorizada</code> → <code>Reprogramada</code> → <code>Congelada</code> (ciclo de reprogramação)<br>
+      <code>Emergencial</code> = estado especial que bypassa o motor de priorização e vai direto ao TMS
+    </div>
+
+      <div class="scope-box in">
+        <h4>✅ Dentro do escopo (Fase 1 — 6 meses)</h4>
+        <ul>
+          <li>Tracking de pedidos de compra (fluxos 1 e 2)</li>
+          <li>Checkpoints automáticos D-0, D-10, D-3, D+2</li>
+          <li>Escalonamento automático por SLA</li>
+          <li>Portal do fornecedor/fabricante (Experience Cloud)</li>
+          <li>Dashboard operacional (CRM Analytics)</li>
+          <li>Score de criticidade por material</li>
+          <li>Email-to-Case para respostas de fornecedores</li>
+          <li>Integração SAP → SF via DigiBee</li>
+          <li>Integração WMS AGV (FTP 3h)</li>
+        </ul>
+      </div>
+      <div class="scope-box out">
+        <h4>⭕ Fases 2 e 3</h4>
+        <ul>
+          <li>OMS: Reserva__c, Acionamento__c, Pauta__c</li>
+          <li>Motor de priorização + S&OE semanal</li>
+          <li>Integração Portal Reservas → SF (DigiBee)</li>
+          <li>Reversa (encerramento, avaria, troca)</li>
+          <li>Entrega emergencial (bypass OMS)</li>
+          <li>TMS B2B + consolidador de cargas</li>
+          <li>Einstein / Agentforce</li>
+          <li>Integração EAM (Attune) — gestão de ativos GIMEA</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== DECISÕES ARQUITETURAIS ===== -->
+  <section class="section" id="decisoes">
+    <div class="section-header">
+      <div class="section-icon">⚡</div>
+      <div>
+        <h2>Decisões Arquiteturais (ADRs)</h2>
+        <p>Escolhas técnicas fundamentais com justificativa e trade-offs</p>
+      </div>
+    </div>
+
+    <div class="cards cards-2">
+      <div class="adr-card">
+        <div class="adr-header">
+          <div class="adr-num">01</div>
+          <div class="adr-header-title">Objetos customizados vs. Cases nativos</div>
+        </div>
+        <div class="adr-body">
+          <div class="adr-row">
+            <div class="adr-row-label">Decisão</div>
+            <div class="adr-row-value decision">Objetos customizados (Pedido_Compra__c, etc.) em vez do objeto Case nativo</div>
+          </div>
+          <div class="adr-row">
+            <div class="adr-row-label">Justificativa</div>
+            <div class="adr-row-value">O processo é gestão de pedidos com linhas de SKU, checkpoints temporais e escalonamento estruturado — não suporte ao cliente. Usar Case forçaria workarounds e geraria dívida técnica ao escalar para o OMS.</div>
+          </div>
+          <div class="adr-row">
+            <div class="adr-row-label">Trade-off</div>
+            <div class="adr-row-value tradeoff">Maior esforço de configuração inicial; escalation rules nativas não disponíveis (constrói em Flow)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="adr-card">
+        <div class="adr-header">
+          <div class="adr-num">02</div>
+          <div class="adr-header-title">DigiBee como única camada de integração</div>
+        </div>
+        <div class="adr-body">
+          <div class="adr-row">
+            <div class="adr-row-label">Decisão</div>
+            <div class="adr-row-value decision">Toda integração SF ↔ sistemas externos passa pelo DigiBee. Nenhuma integração direta SF ↔ SAP</div>
+          </div>
+          <div class="adr-row">
+            <div class="adr-row-label">Justificativa</div>
+            <div class="adr-row-value">DigiBee é o barramento corporativo do Itaú — centraliza controle de erro, retry, monitoramento e governança. Alinhado ao padrão do banco.</div>
+          </div>
+          <div class="adr-row">
+            <div class="adr-row-label">Implicação</div>
+            <div class="adr-row-value tradeoff">Contrato de integração deve ser definido com equipe DigiBee/SAP antes do desenvolvimento</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="adr-card">
+        <div class="adr-header">
+          <div class="adr-num">03</div>
+          <div class="adr-header-title">Experience Cloud — apenas fornecedores/fabricantes</div>
+        </div>
+        <div class="adr-body">
+          <div class="adr-row">
+            <div class="adr-row-label">Decisão</div>
+            <div class="adr-row-value decision">Experience Cloud somente para fornecedores/fabricantes (~90). Fiscais usam o Portal de Reservas Angular — NÃO migram para SF.</div>
+          </div>
+          <div class="adr-row">
+            <div class="adr-row-label">Justificativa</div>
+            <div class="adr-row-value">São públicos distintos: fornecedores reportam status de produção (novo portal); fiscais gerenciam reservas de obras (portal existente, em evolução). Migrar o portal de reservas não traz ganho proporcional.</div>
+          </div>
+          <div class="adr-row">
+            <div class="adr-row-label">Risco</div>
+            <div class="adr-row-value tradeoff">Modelo "usuário gest" para fornecedores precisa de aprovação COI/Segurança. Validar integração com <strong>Rainbow/Parcerias</strong> — plataforma corporativa de habilitação de terceiros do Itaú.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="adr-card">
+        <div class="adr-header">
+          <div class="adr-num">04</div>
+          <div class="adr-header-title">Org único (mesmo da Manutenção)</div>
+        </div>
+        <div class="adr-body">
+          <div class="adr-row">
+            <div class="adr-row-label">Decisão</div>
+            <div class="adr-row-value decision">Implementar no mesmo org Salesforce que já roda o módulo de manutenção</div>
+          </div>
+          <div class="adr-row">
+            <div class="adr-row-label">Justificativa</div>
+            <div class="adr-row-value">Reduz custo de licença, simplifica integrações futuras entre módulos e viabiliza visão 360° da agência (obras + manutenção + compras).</div>
+          </div>
+          <div class="adr-row">
+            <div class="adr-row-label">Pré-requisito</div>
+            <div class="adr-row-value tradeoff">Análise do estado atual do org antes de iniciar (namespace, limites de metadados, customizações existentes)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="adr-card">
+        <div class="adr-header">
+          <div class="adr-num">05</div>
+          <div class="adr-header-title">Portal de Reservas permanece em Angular/AWS</div>
+        </div>
+        <div class="adr-body">
+          <div class="adr-row">
+            <div class="adr-row-label">Decisão</div>
+            <div class="adr-row-value decision">O Portal de Reservas (Angular/AWS) não será migrado para Salesforce. Será integrado via DigiBee na Fase 2.</div>
+          </div>
+          <div class="adr-row">
+            <div class="adr-row-label">Justificativa</div>
+            <div class="adr-row-value">Portal já está em produção com evolução planejada (manutenção, equipamentos, acionamento). Migrar = retrabalho sem ganho proporcional. Integração via DigiBee entrega os dados sem perder o que foi construído.</div>
+          </div>
+          <div class="adr-row">
+            <div class="adr-row-label">Integração (Fase 2)</div>
+            <div class="adr-row-value">Portal Reservas → evento → DigiBee Pipeline → SF REST API → Upsert Reserva__c + Acionamento__c</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="adr-card">
+        <div class="adr-header">
+          <div class="adr-num">06</div>
+          <div class="adr-header-title">TMS B2B externo ao Salesforce</div>
+        </div>
+        <div class="adr-body">
+          <div class="adr-row">
+            <div class="adr-row-label">Decisão</div>
+            <div class="adr-row-value decision">O TMS B2B (sistema de gestão de transporte para agências) será construído fora do Salesforce. SF alimenta via DigiBee.</div>
+          </div>
+          <div class="adr-row">
+            <div class="adr-row-label">Justificativa</div>
+            <div class="adr-row-value">TMS B2B não existe ainda. O CB4 (TMS B2C) é a referência arquitetural. Consolidador de cargas, cotador de frete e gerenciador de entregas são capacidades específicas de transporte, fora do core do Salesforce.</div>
+          </div>
+          <div class="adr-row">
+            <div class="adr-row-label">MVP (Fase 3)</div>
+            <div class="adr-row-value tradeoff">E-mail/template para transportadoras como primeiro passo. Integração Intelpo (homologada) para carriers tradicionais.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="adr-card" style="grid-column:1/-1;">
+        <div class="adr-header">
+          <div class="adr-num">07</div>
+          <div class="adr-header-title">Salesforce responde à pergunta aberta do TO-BE sobre portal de compras</div>
+        </div>
+        <div class="adr-body">
+          <div class="adr-row">
+            <div class="adr-row-label">Contexto</div>
+            <div class="adr-row-value">O TO-BE v20260911 registra como pergunta aberta: <em>"Qual portal usaremos para realizar a compra do material e acompanhar a produção/entrega?"</em> — confirma que esta lacuna ainda não estava preenchida.</div>
+          </div>
+          <div class="adr-row">
+            <div class="adr-row-label">Decisão</div>
+            <div class="adr-row-value decision">Salesforce (Fase 1) é a resposta para essa pergunta aberta — cobre compra + acompanhamento de produção com fornecedores + visibilidade de entrega para analistas internos.</div>
+          </div>
+          <div class="adr-row">
+            <div class="adr-row-label">Impacto</div>
+            <div class="adr-row-value">O OMS [AWS] resolve o lado da demanda (priorização de reservas). O Salesforce resolve o lado da oferta (gestão de compras). São complementares — não concorrentes.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== MODELO DE DADOS ===== -->
+  <section class="section" id="modelo-dados">
+    <div class="section-header">
+      <div class="section-icon">🗂️</div>
+      <div>
+        <h2>Modelo de Dados</h2>
+        <p>Objetos Salesforce, hierarquia e campos principais</p>
+      </div>
+    </div>
+
+    <div class="mb-24">
+      <h3 style="font-size:14px;font-weight:700;color:var(--itau-dark);margin-bottom:12px;">Hierarquia de objetos</h3>
+      <div class="obj-tree">
+        <div><span class="obj-root">Account</span> <span class="obj-note">// Fornecedor — standard object + campos CNPJ__c, Score_Performance__c</span></div>
+        <div class="obj-child">└── <span style="color:#1A50C8;font-weight:700;">Pedido_Compra__c</span> <span class="obj-note">// PO vinda do SAP via DigiBee</span></div>
+        <div class="obj-leaf">├── <span style="color:#475569;font-weight:600;">Linha_Pedido__c</span> <span class="obj-note">// 1 por SKU</span></div>
+        <div class="obj-leaf">├── <span style="color:#475569;font-weight:600;">Checkpoint__c</span> <span class="obj-note">// D-0, D-10, D-3, D+2</span></div>
+        <div class="obj-leaf">├── <span style="color:#475569;font-weight:600;">Escalation__c</span> <span class="obj-note">// criado quando checkpoint vence sem resposta</span></div>
+        <div class="obj-leaf">└── <span style="color:#475569;font-weight:600;">Slot_AGV__c</span> <span class="obj-note">// solicitação de agendamento inbound</span></div>
+        <br>
+        <div><span class="obj-root">Product2</span> <span class="obj-note">// SKU do catálogo + Criticidade__c (A/B/C) + Saldo_Estoque__c</span></div>
+      </div>
+    </div>
+
+    <div class="cards cards-2 mb-16">
+      <div>
+        <h3 style="font-size:14px;font-weight:700;color:var(--itau-dark);margin-bottom:12px;">Pedido_Compra__c — campos principais</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Campo</th><th>Tipo</th><th>Observação</th></tr></thead>
+            <tbody>
+              <tr><td><code>Numero_PO_SAP__c</code></td><td>Text</td><td><strong>External ID</strong> — chave de upsert via DigiBee</td></tr>
+              <tr><td><code>Fornecedor__c</code></td><td>Lookup (Account)</td><td>Resolvido por CNPJ__c no DigiBee</td></tr>
+              <tr><td><code>Tipo_Transacao_SAP__c</code></td><td>Picklist</td><td>ME51N / CN22 / MB21 / W31 / W32 — rastreabilidade da origem</td></tr>
+              <tr><td><code>Codigo_UPE__c</code></td><td>Text</td><td>Identificador único da obra (Orquestrador) — casa pedido com projeto</td></tr>
+              <tr><td><code>Tipo_Fluxo__c</code></td><td>Picklist</td><td>Estocado-AGV / Nao-estocado-AGV / Entrega-direta</td></tr>
+              <tr><td><code>Data_Entrega_Prevista__c</code></td><td>Date</td><td>Base para cálculo dos checkpoints; alteração recalcula tudo</td></tr>
+              <tr><td><code>Status__c</code></td><td>Picklist</td><td>Aguardando / Em-produção / Aguardando-AGV / Entregue / Atrasado</td></tr>
+              <tr><td><code>Score_Criticidade__c</code></td><td>Number</td><td>Calculado por Apex Invocable diariamente</td></tr>
+              <tr><td><code>SAP_Sync_Status__c</code></td><td>Picklist</td><td>Sincronizado / Erro-pendente / Aguardando</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:14px;font-weight:700;color:var(--itau-dark);margin-bottom:12px;">Checkpoint__c — campos principais</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Campo</th><th>Tipo</th><th>Observação</th></tr></thead>
+            <tbody>
+              <tr><td><code>Tipo__c</code></td><td>Picklist</td><td>D-0 / D-10 / D-3 / D+2</td></tr>
+              <tr><td><code>Data_Disparo__c</code></td><td>DateTime</td><td>Recalculada se Data_Entrega_Prevista__c mudar</td></tr>
+              <tr><td><code>Status__c</code></td><td>Picklist</td><td>Pendente / Respondido / Suprimido / Escalado</td></tr>
+              <tr><td><code>Resposta_Fornecedor__c</code></td><td>Long Text</td><td>Via portal ou Email-to-Case</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="font-size:14px;font-weight:700;color:var(--itau-dark);margin-bottom:12px;margin-top:20px;">Escalation__c — campos principais</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Campo</th><th>Tipo</th><th>Observação</th></tr></thead>
+            <tbody>
+              <tr><td><code>Nivel__c</code></td><td>Picklist</td><td>1-PCTec / 2-Analista-Banco / 3-Coordenador</td></tr>
+              <tr><td><code>Data_Abertura__c</code></td><td>DateTime</td><td>Auto-preenchido ao criar</td></tr>
+              <tr><td><code>Data_Resolucao__c</code></td><td>DateTime</td><td>Preenchido ao fechar</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Nota de design:</strong> Os dois fluxos principais (itens estocados e não-estocados para AGV) têm lógica de negócio quase idêntica. O campo <code>Tipo_Fluxo__c</code> diferencia o comportamento no Flow sem duplicar objetos — isso viabiliza a <strong>visão unificada</strong> que hoje não existe no Excel.
+    </div>
+  </section>
+
+  <!-- ===== INTEGRAÇÕES ===== -->
+  <section class="section" id="integracoes">
+    <div class="section-header">
+      <div class="section-icon">🔗</div>
+      <div>
+        <h2>Arquitetura de Integração</h2>
+        <p>DigiBee como barramento único — SAP ECC e AGV WMS</p>
+      </div>
+    </div>
+
+    <div class="cards cards-2 mb-24">
+      <div class="card">
+        <div class="card-title">SAP ECC → Salesforce</div>
+        <div class="diagram" style="margin-top:12px;">
+<span class="box">SAP ECC</span>
+  <span class="arrow">└─</span> IDoc / RFC (criação/atualização de PO)
+       <span class="arrow">└─</span> <span class="label">DigiBee Pipeline</span>
+             <span class="arrow">├─</span> Transformação: campos SAP → REST SF
+             <span class="arrow">├─</span> Enrich: resolve AccountId por CNPJ
+             <span class="arrow">├─</span> Enrich: Motor Alocação → fornecedor designado
+             <span class="arrow">├─</span> Retry automático em falha
+             <span class="arrow">└─</span> <span class="box">Salesforce REST API</span>
+                   <span class="arrow">└─</span> Upsert: Pedido_Compra__c
+                      (ext. ID: Numero_PO_SAP__c)
+        </div>
+        <div class="card-tag">OAuth 2.0 · JWT Bearer Flow</div>
+        <p style="font-size:11px;color:var(--text-secondary);margin-top:8px;">Transações de origem: ME51N / CN22 / MB21 / W31 / W32 → campo Tipo_Transacao_SAP__c</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Sistema AGV (WMS físico) → Salesforce</div>
+        <div class="diagram" style="margin-top:12px;">
+<span class="box">Sistema AGV</span> <span class="obj-note">// WMS físico Cajamar</span>
+  <span class="arrow">└─</span> Arquivo FTP (a cada 3h)
+       <span class="arrow">└─</span> <span class="label">DigiBee Pipeline</span>
+             <span class="arrow">├─</span> Parse do arquivo de estoque
+             <span class="arrow">└─</span> <span class="box">Salesforce REST API</span>
+                   <span class="arrow">└─</span> Update: Product2
+                      Saldo_Estoque__c por SKU
+        </div>
+        <div class="card-tag warning">3h · Bulk API 2.0 recomendado</div>
+        <p style="font-size:12px;color:var(--text-secondary);margin-top:8px;"><strong>WMS Itaú [AWS] ≠ Sistema AGV</strong> — duas camadas: WMS Itaú = estoque lógico (em construção); AGV = estoque físico. Fase 2: saldo lógico via WMS Itaú API.</p>
+      </div>
+    </div>
+
+    <h3 style="font-size:14px;font-weight:700;color:var(--itau-dark);margin-bottom:12px;margin-top:24px;">Contrato de integração a definir (SAP/DigiBee)</h3>
+    <div class="table-wrap mb-16">
+      <table>
+        <thead><tr><th>Item</th><th>Detalhe</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Campos obrigatórios do payload</td><td>Número PO, CNPJ fornecedor, SKUs, quantidades, datas previstas, <strong>transação SAP origem</strong>, <strong>Código UPE</strong></td><td><span class="chip orange">A definir</span></td></tr>
+          <tr><td>Evento de trigger</td><td>Criação de PO apenas, ou também atualizações de status/data?</td><td><span class="chip orange">A definir</span></td></tr>
+          <tr><td>Fornecedor não cadastrado no SF</td><td>DigiBee cria Account temporária ou retorna erro para reprocessamento?</td><td><span class="chip orange">A definir</span></td></tr>
+          <tr><td>Baixa no SAP — quando?</td><td>Questão aberta do C1: na solicitação de separação? na entrega confirmada? Define o trigger write-back SF→SAP (Fase 2)</td><td><span class="chip orange">Questão aberta</span></td></tr>
+          <tr><td>Autenticação</td><td>Connected App + OAuth 2.0 — JWT Bearer Flow (server-to-server)</td><td><span class="chip green">Definido</span></td></tr>
+          <tr><td>Retry e DLQ</td><td>DigiBee gerencia; falhas devem atualizar SAP_Sync_Status__c</td><td><span class="chip green">Definido</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="warning-note">
+      <strong>Blocker crítico:</strong> O contrato SAP ↔ DigiBee precisa ser definido antes do desenvolvimento. Incluir: transação SAP de origem, Código UPE da obra. Questão de baixa no SAP deve ser alinhada com o time de arquitetura da plataforma.
+    </div>
+  </section>
+
+  <!-- ===== AUTOMAÇÃO ===== -->
+  <section class="section" id="automacao">
+    <div class="section-header">
+      <div class="section-icon">⚙️</div>
+      <div>
+        <h2>Arquitetura de Automação</h2>
+        <p>Flows nativos + Apex restrito a onde Flow não alcança</p>
+      </div>
+    </div>
+
+    <div class="mb-24">
+      <h3 style="font-size:14px;font-weight:700;color:var(--itau-dark);margin-bottom:12px;">Mapa de Flows</h3>
+      <div class="table-wrap">
+        <table class="flow-table">
+          <thead><tr><th>Flow</th><th>Tipo</th><th>Trigger</th><th>Responsabilidade</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>PedidoCompra_OnCreateUpdate</td>
+              <td><span class="chip">Record-Triggered</span></td>
+              <td>Criação ou alteração de Data_Entrega_Prevista__c</td>
+              <td>Cria / recalcula Checkpoints; invoca Apex de criticidade</td>
+            </tr>
+            <tr>
+              <td>Checkpoint_Scheduler</td>
+              <td><span class="chip orange">Scheduled</span></td>
+              <td>A cada hora</td>
+              <td>Processa checkpoints vencidos; cria Escalations; suprime quando slot AGV confirmado</td>
+            </tr>
+            <tr>
+              <td>Escalation_Escalator</td>
+              <td><span class="chip orange">Scheduled</span></td>
+              <td>A cada hora</td>
+              <td>Verifica SLA de Escalations abertos; sobe nível se SLA vencido</td>
+            </tr>
+            <tr>
+              <td>Score_Criticidade_Diario</td>
+              <td><span class="chip orange">Scheduled</span></td>
+              <td>Diário (madrugada)</td>
+              <td>Recalcula Score_Criticidade__c para todos os pedidos em aberto</td>
+            </tr>
+            <tr>
+              <td>Portal_AcaoFornecedor</td>
+              <td><span class="chip">Record-Triggered</span></td>
+              <td>Atualização via portal</td>
+              <td>Fecha Checkpoint relacionado; notifica analista responsável</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="cards cards-2 mb-16">
+      <div class="card">
+        <div class="card-title">Apex — uso restrito</div>
+        <div class="card-body">
+          <p style="margin-bottom:12px;">Apex é necessário apenas onde Flow não consegue expressar a lógica:</p>
+          <p><strong>CriticidadeScoreCalculator</strong> (Invocable)<br>
+          <span style="font-size:12px;color:var(--text-secondary);">Cálculo multi-campo cruzando Criticidade__c + Saldo_Estoque__c + reservas abertas — loops e comparações que explodem em Flow</span></p>
+          <br>
+          <p><strong>CheckpointRecalculator</strong> (Invocable)<br>
+          <span style="font-size:12px;color:var(--text-secondary);">Delete + re-create dos Checkpoints pendentes quando data muda — operação DML em coleção mais segura em Apex</span></p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Email-to-Case</div>
+        <div class="card-body">
+          <p><strong>Caixa dedicada</strong> configurada como Email-to-Case</p><br>
+          <p><strong>Roteamento:</strong> extrai Numero_PO_SAP__c do assunto → vincula ao Pedido_Compra__c</p><br>
+          <p><strong>Flow pós-criação:</strong> analisa corpo do email → atualiza Checkpoint__c se conteúdo identificável</p><br>
+          <p style="color:var(--warning);font-size:12px;margin-top:8px;">⚠️ Email-to-Case usa objeto Case internamente — requer mapeamento customizado para vincular ao Pedido_Compra__c. Avaliar com equipe de desenvolvimento.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Princípio de automação:</strong> Tudo que é fluxo, notificação, criação de registros relacionados e atualização de status é construído em Flow nativo. Apex é invocado pelo Flow somente para operações que exigem lógica complexa ou DML em coleções — mantendo rastreabilidade e reduzindo dívida técnica.
+    </div>
+  </section>
+
+  <!-- ===== PORTAL RESERVAS OPCOES ===== -->
+  <section class="section" id="portal-opcoes">
+    <div class="section-header">
+      <div class="section-icon">🔀</div>
+      <div>
+        <h2>Portal de Reservas — Opções de Arquitetura</h2>
+        <p>Decisão pendente: manter Angular/AWS integrado ou reconstruir em Experience Cloud</p>
+      </div>
+    </div>
+
+    <div class="warning-note mb-24">
+      <strong>Contexto:</strong> O Portal de Reservas (Angular/AWS) já existe, está em produção e tem roadmap de evolução ativo. Há duas opções arquiteturais com trade-offs distintos para a integração com Salesforce.
+    </div>
+
+    <!-- OPÇÃO A -->
+    <div style="margin-bottom:32px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="background:var(--itau-blue);color:white;border-radius:8px;padding:6px 16px;font-weight:700;font-size:14px;">Opção A</div>
+        <h3 style="font-size:16px;font-weight:700;color:var(--itau-dark);">Manter Angular/AWS e integrar via DigiBee</h3>
+        <span class="chip green">Recomendada para Fase 2</span>
+      </div>
+
+      <div class="cards cards-2 mb-16">
+        <div class="card">
+          <div class="card-title">Fluxo de integração</div>
+          <div class="diagram">
+<span class="box">Portal de Reservas</span> (Angular/AWS)
+  <span class="arrow">├─</span> Cria reserva/acionamento
+  <span class="arrow">│    └─</span> <span class="label">DigiBee Pipeline</span>
+  <span class="arrow">│         └─</span> <span class="box">SF REST API</span>
+  <span class="arrow">│               └─</span> Upsert Reserva__c
+  <span class="arrow">├─</span> Cancelamento/reprogramação
+  <span class="arrow">│    └─</span> <span class="label">DigiBee</span> → SF update Status
+  <span class="arrow">└─</span> Consulta resultado OMS (opcional)
+       <span class="arrow">└─</span> <span class="label">DigiBee</span> ← SF priorização
+
+<span class="comment">// Salesforce (interno)</span>
+Reserva__c criada → <span class="label">Flow</span> → classifica tipo + estado
+Motor OMS processa → S&OE alimentado em tempo real
+          </div>
+        </div>
+        <div>
+          <div class="cards" style="gap:12px;">
+            <div class="card" style="border-left:3px solid var(--success);">
+              <div class="card-title" style="color:#15803D;">Prós</div>
+              <div class="card-body" style="font-size:12px;">
+                <p>✓ Portal já existe e em produção</p>
+                <p>✓ Time com roadmap ativo (manutenção, equipamentos)</p>
+                <p>✓ Sem rebuild — menor risco de interrupção</p>
+                <p>✓ Sem licença Experience Cloud para fiscais</p>
+                <p>✓ Caminho mais rápido para Fase 2</p>
+              </div>
+            </div>
+            <div class="card" style="border-left:3px solid #EF4444;">
+              <div class="card-title" style="color:#B91C1C;">Contras</div>
+              <div class="card-body" style="font-size:12px;">
+                <p>✗ Dois sistemas a manter (Angular + SF)</p>
+                <p>✗ Dados replicados — governança dividida</p>
+                <p>✗ Fiscal não vê status SF em tempo real sem API de consulta</p>
+                <p>✗ Nova feature exige coordenação entre dois times</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPÇÃO B -->
+    <div style="margin-bottom:32px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div style="background:#64748B;color:white;border-radius:8px;padding:6px 16px;font-weight:700;font-size:14px;">Opção B</div>
+        <h3 style="font-size:16px;font-weight:700;color:var(--itau-dark);">Reconstruir em Salesforce Experience Cloud</h3>
+        <span class="chip gray">Considerar Fase 3+</span>
+      </div>
+
+      <div class="cards cards-2 mb-16">
+        <div class="card">
+          <div class="card-title">Fluxo de integração</div>
+          <div class="diagram">
+<span class="box">Experience Cloud</span> (LWR Site — fiscais)
+  <span class="arrow">├─</span> Fiscal faz login (usuário gest)
+  <span class="arrow">├─</span> Cria Reserva__c diretamente na org
+  <span class="arrow">├─</span> <span class="label">Record-Triggered Flow</span> → imediato
+  <span class="arrow">├─</span> OMS e S&OE processam em tempo real
+  <span class="arrow">└─</span> Fiscal vê status completo no portal
+
+<span class="comment">// Integrações mantidas</span>
+<span class="box">SF</span> → <span class="label">DigiBee</span> → <span class="box">SAP ECC</span>
+  <span class="comment">// substitui JSON às 19h do Angular</span>
+<span class="box">EAM</span> → <span class="label">DigiBee</span> → <span class="box">SF</span>
+  <span class="comment">// catálogo SKU, inventário agências</span>
+          </div>
+        </div>
+        <div>
+          <div class="cards" style="gap:12px;">
+            <div class="card" style="border-left:3px solid var(--success);">
+              <div class="card-title" style="color:#15803D;">Prós</div>
+              <div class="card-body" style="font-size:12px;">
+                <p>✓ Plataforma única — sem duplicidade de dados</p>
+                <p>✓ Automações SF disparam em tempo real</p>
+                <p>✓ Arquitetura mais simples a longo prazo</p>
+                <p>✓ Fiscal vê visibilidade total do status</p>
+                <p>✓ OMS sem dependência de time Angular</p>
+              </div>
+            </div>
+            <div class="card" style="border-left:3px solid #EF4444;">
+              <div class="card-title" style="color:#B91C1C;">Contras</div>
+              <div class="card-body" style="font-size:12px;">
+                <p>✗ Retrabalho — jogar fora o que foi construído</p>
+                <p>✗ Rebuild de todas as regras de negócio (40 dias, limites SKU, validações)</p>
+                <p>✗ Integração SF→SAP via DigiBee precisa ser construída</p>
+                <p>✗ Licença EC para todos os fiscais (podem ser 100–300+)</p>
+                <p>✗ Aprovação COI/Segurança para acesso de terceiros</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPARATIVO -->
+    <h3 style="font-size:14px;font-weight:700;color:var(--itau-dark);margin-bottom:12px;">Comparativo de decisão</h3>
+    <div class="table-wrap mb-16">
+      <table>
+        <thead><tr><th>Critério</th><th>Opção A — Manter Angular</th><th>Opção B — Experience Cloud</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Tempo para Fase 2</strong></td>
+            <td><span class="chip green">Menor</span> — portal existe</td>
+            <td><span class="chip" style="background:#FEF2F2;color:#B91C1C;">Maior</span> — rebuild necessário</td>
+          </tr>
+          <tr>
+            <td><strong>Custo de licença</strong></td>
+            <td><span class="chip green">Sem adicional</span></td>
+            <td><span class="chip orange">Experience Cloud × nº fiscais</span></td>
+          </tr>
+          <tr>
+            <td><strong>Manutenção longo prazo</strong></td>
+            <td><span class="chip orange">Dois times, dois sistemas</span></td>
+            <td><span class="chip green">Um time, uma plataforma</span></td>
+          </tr>
+          <tr>
+            <td><strong>Flexibilidade OMS</strong></td>
+            <td><span class="chip orange">Depende de API entre sistemas</span></td>
+            <td><span class="chip green">Nativa — dados no mesmo org</span></td>
+          </tr>
+          <tr>
+            <td><strong>Risco de migração</strong></td>
+            <td><span class="chip green">Baixo</span></td>
+            <td><span class="chip" style="background:#FEF2F2;color:#B91C1C;">Alto</span> — features + SAP integration</td>
+          </tr>
+          <tr>
+            <td><strong>Visibilidade do fiscal</strong></td>
+            <td><span class="chip orange">Limitada</span> — precisa de API de consulta</td>
+            <td><span class="chip green">Completa em tempo real</span></td>
+          </tr>
+          <tr>
+            <td><strong>Recomendação</strong></td>
+            <td><span class="chip green">✓ Fase 2 — caminho mais rápido</span></td>
+            <td><span class="chip gray">Fase 3+ — se Angular travar evolução</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note">
+      <strong>Posição do arquiteto Salesforce:</strong> A <strong>Opção A</strong> é recomendada para a Fase 2 — preserva o investimento existente, não bloqueia o OMS e tem menor risco. A <strong>Opção B</strong> deve ser revisitada quando o portal Angular se tornar um gargalo de evolução ou quando os custos de manutenção de dois sistemas superarem o custo de reconstrução. O ponto de decisão natural é após 12–18 meses de operação com ambos integrados. <strong>Ponto crítico:</strong> levantar o número real de fiscais ativos (terceiros) antes de avaliar o custo de licença da Opção B.
+    </div>
+  </section>
+
+  <!-- ===== PORTAL ===== -->
+  <section class="section" id="portal">
+    <div class="section-header">
+      <div class="section-icon">🌐</div>
+      <div>
+        <h2>Portal do Fornecedor (Experience Cloud)</h2>
+        <p>LWR Site — autoatendimento e eliminação do loop de emails</p>
+      </div>
+    </div>
+
+    <div class="cards cards-3 mb-24">
+      <div class="card">
+        <div class="card-title">Tipo de site</div>
+        <div class="card-body">
+          <strong>LWR (Lightning Web Runtime)</strong><br>
+          Performance superior, design moderno, suporte completo a LWC customizados. Recomendado sobre Aura para novos portais.
+        </div>
+        <span class="card-tag">LWR · Experience Cloud</span>
+      </div>
+      <div class="card">
+        <div class="card-title">Modelo de acesso</div>
+        <div class="card-body">
+          <strong>1 usuário por fornecedor</strong> (por CNPJ / Account)<br>
+          Visibilidade restrita: somente vê seus próprios Pedido_Compra__c<br>
+          Autenticação: user/senha padrão EC (sem SSO externo na fase 1)
+        </div>
+        <span class="card-tag warning">Modelo "usuário gest"</span>
+      </div>
+      <div class="card">
+        <div class="card-title">Segurança</div>
+        <div class="card-body">
+          Guest profile: acesso 0 a objetos de negócio<br>
+          CSRF protection nativa do LWR<br>
+          FLS restringe campos sensíveis (Score, SAP Status)
+        </div>
+        <span class="card-tag success">Todo acesso requer login</span>
+      </div>
+    </div>
+
+    <h3 style="font-size:14px;font-weight:700;color:var(--itau-dark);margin-bottom:12px;">Páginas e componentes LWC</h3>
+    <div class="table-wrap mb-16">
+      <table>
+        <thead><tr><th>Página</th><th>Componentes LWC</th><th>Dados expostos</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Meus Pedidos</strong></td>
+            <td><code>pedidoListView</code></td>
+            <td>Pedido_Compra__c do fornecedor: número PO, data entrega, status, criticidade (A/B/C)</td>
+          </tr>
+          <tr>
+            <td><strong>Detalhe do Pedido</strong></td>
+            <td><code>pedidoStatusUpdate</code>, <code>agendamentoRequest</code>, <code>criticidadeBadge</code></td>
+            <td>Linha_Pedido__c por SKU; formulário de status por item; botão de solicitação de slot AGV</td>
+          </tr>
+          <tr>
+            <td><strong>Histórico</strong></td>
+            <td><code>pedidoTimeline</code></td>
+            <td>Pedidos finalizados com linha do tempo de Checkpoints</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="warning-note">
+      <strong>Blocker externo:</strong> A aprovação do modelo "usuário gest" para fornecedores precisa ser validada com <strong>COI e Segurança Itaú</strong> antes de iniciar o desenvolvimento do portal. Este processo deve correr em paralelo ao desenvolvimento do módulo interno (meses 1–3).
+    </div>
+  </section>
+
+  <!-- ===== PERFIS E ACESSOS ===== -->
+  <section class="section" id="perfis">
+    <div class="section-header">
+      <div class="section-icon">🔐</div>
+      <div>
+        <h2>Perfis, Permission Sets e Compartilhamento</h2>
+        <p>Modelo de acesso baseado no princípio do menor privilégio</p>
+      </div>
+    </div>
+
+    <div class="mb-24">
+      <h3 style="font-size:14px;font-weight:700;color:var(--itau-dark);margin-bottom:12px;">Hierarquia de papéis (Role Hierarchy)</h3>
+      <div class="obj-tree">
+        <div style="color:#EC7000;font-weight:700;font-size:14px;">Coordenador de Suprimentos</div>
+        <div class="obj-child">└── <span style="font-weight:700;">Analista Itaú (FEA/PCTec sênior)</span> <span class="obj-note">// visibilidade sobre todos os registros de seus subordinados</span></div>
+        <div style="padding-left:60px;color:#475569;font-weight:600;">└── Analista PCTec (operação)</div>
+      </div>
+    </div>
+
+    <div class="cards cards-2 mb-24">
+      <div>
+        <h3 style="font-size:14px;font-weight:700;color:var(--itau-dark);margin-bottom:12px;">OWD — Org-Wide Defaults</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Objeto</th><th>OWD Interno</th><th>OWD Externo (EC)</th></tr></thead>
+            <tbody>
+              <tr><td><code>Account</code></td><td>Private</td><td>Private</td></tr>
+              <tr><td><code>Pedido_Compra__c</code></td><td>Private</td><td>Private</td></tr>
+              <tr><td><code>Linha_Pedido__c</code></td><td>Ctrl. by Parent</td><td>Ctrl. by Parent</td></tr>
+              <tr><td><code>Checkpoint__c</code></td><td>Ctrl. by Parent</td><td>No Access</td></tr>
+              <tr><td><code>Escalation__c</code></td><td>Private</td><td>No Access</td></tr>
+              <tr><td><code>Slot_AGV__c</code></td><td>Private</td><td>Private</td></tr>
+              <tr><td><code>Product2</code></td><td>Public Read Only</td><td>Public Read Only</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:14px;font-weight:700;color:var(--itau-dark);margin-bottom:12px;">Perfis internos</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Perfil</th><th>Licença</th><th>Acesso base</th></tr></thead>
+            <tbody>
+              <tr><td><code>Admin_Suprimentos</code></td><td>SF Full</td><td>Acesso total</td></tr>
+              <tr><td><code>Analista_PCTec</code></td><td>SF Platform</td><td>Pedidos, Checkpoints, Escalation nível 1</td></tr>
+              <tr><td><code>Analista_Itau</code></td><td>SF Platform</td><td>Pedidos, Checkpoints, Escalation nível 1-2</td></tr>
+              <tr><td><code>Coordenador</code></td><td>SF Platform</td><td>Tudo + fechar Escalation nível 3</td></tr>
+              <tr><td><code>GIMEA_Viewer</code></td><td>SF Platform</td><td>Leitura de pedidos de equipamentos (MB21/W31/W32) — visibilidade de status de entrega de ativos</td></tr>
+              <tr><td><code>Fornecedor_Portal</code></td><td>EC Community</td><td>Somente seus pedidos (leitura + update linhas)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-size:14px;font-weight:700;color:var(--itau-dark);margin-bottom:12px;">Permission Sets — granularidade de função</h3>
+    <div class="table-wrap mb-16">
+      <table>
+        <thead><tr><th>Permission Set</th><th>Concedido a</th><th>Capacidades extras</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>PS_Gerenciar_Checkpoints</code></td>
+            <td>Analista PCTec, Analista Itaú</td>
+            <td>Criar/atualizar Checkpoints; suprimir manualmente</td>
+          </tr>
+          <tr>
+            <td><code>PS_Aprovar_Escalations</code></td>
+            <td>Coordenador</td>
+            <td>Fechar/resolver Escalations em qualquer nível; reatribuir</td>
+          </tr>
+          <tr>
+            <td><code>PS_Visualizar_Score_Criticidade</code></td>
+            <td>Analista Itaú, Coordenador</td>
+            <td>Ver campo Score_Criticidade__c (oculto de PCTec para reduzir ruído)</td>
+          </tr>
+          <tr>
+            <td><code>PS_Dashboard_Operacional</code></td>
+            <td>Todos os internos</td>
+            <td>Acesso às pastas CRM Analytics do módulo</td>
+          </tr>
+          <tr>
+            <td><code>PS_Gerenciar_Slot_AGV</code></td>
+            <td>Analista Itaú, Coordenador</td>
+            <td>Confirmar/cancelar Slot_AGV__c após alinhamento com AGV</td>
+          </tr>
+          <tr>
+            <td><code>PS_Portal_Admin</code></td>
+            <td>Admin_Suprimentos</td>
+            <td>Administrar site Experience Cloud e usuários externos</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:14px;font-weight:700;color:var(--itau-dark);margin-bottom:12px;">Campos bloqueados para o fornecedor (FLS)</h3>
+    <div class="cards cards-4">
+      <div class="card" style="border-top:3px solid #EF4444;">
+        <div class="card-title" style="color:#EF4444;">Bloqueado</div>
+        <div class="card-body"><code>Score_Criticidade__c</code><br><small>Métrica interna</small></div>
+      </div>
+      <div class="card" style="border-top:3px solid #EF4444;">
+        <div class="card-title" style="color:#EF4444;">Bloqueado</div>
+        <div class="card-body"><code>SAP_Sync_Status__c</code><br><small>Dado técnico</small></div>
+      </div>
+      <div class="card" style="border-top:3px solid #EF4444;">
+        <div class="card-title" style="color:#EF4444;">Objeto oculto</div>
+        <div class="card-body"><code>Escalation__c</code><br><small>Gestão interna</small></div>
+      </div>
+      <div class="card" style="border-top:3px solid #EF4444;">
+        <div class="card-title" style="color:#EF4444;">Objeto oculto</div>
+        <div class="card-body"><code>Checkpoint__c</code><br><small>Fornecedor interage via portal, não via objeto</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== LICENÇAS ===== -->
+  <section class="section" id="licencas">
+    <div class="section-header">
+      <div class="section-icon">📋</div>
+      <div>
+        <h2>Licenças e Produtos Salesforce</h2>
+        <p>Estimativa de necessidades para a Fase 1</p>
+      </div>
+    </div>
+
+    <div class="note mb-24">
+      <strong>Contexto:</strong> O Itaú já possui licenças <strong>Sales Cloud — Unlimited Edition</strong>. Isso cobre a maior parte das necessidades da Fase 1 sem aquisição adicional. O único novo custo de licença é o portal de fornecedores (Experience Cloud).
+    </div>
+
+    <div class="table-wrap mb-24">
+      <table>
+        <thead><tr><th>Produto</th><th>Uso</th><th>Situação</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Core Platform</strong><br><small style="color:var(--text-secondary);">Flows, Apex, objetos customizados</small></td>
+            <td>Base do módulo — automação, modelo de dados, integrações</td>
+            <td><span class="chip green">✅ Incluído — Sales Cloud Unlimited</span></td>
+          </tr>
+          <tr>
+            <td><strong>CRM Analytics</strong></td>
+            <td>Dashboard operacional, criticidade, performance de fornecedores</td>
+            <td><span class="chip green">✅ Incluído — Sales Cloud Unlimited</span></td>
+          </tr>
+          <tr>
+            <td><strong>Experience Cloud</strong></td>
+            <td>Portal do fornecedor (LWR Site) — ~90 usuários externos</td>
+            <td><span class="chip orange">❌ Aquisição necessária</span></td>
+          </tr>
+          <tr>
+            <td><strong>Einstein básico</strong></td>
+            <td>Features Einstein incluídas no Unlimited (Activity Capture, etc.)</td>
+            <td><span class="chip green">⚠️ Parcialmente incluído</span></td>
+          </tr>
+          <tr>
+            <td><strong>Agentforce</strong></td>
+            <td>Copilot do analista, Agent de suporte ao fornecedor — <em>Fase 2</em></td>
+            <td><span class="chip gray">Add-on separado (fase futura)</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:14px;font-weight:700;color:var(--itau-dark);margin-bottom:16px;">Estimativa de licenças — Fase 1</h3>
+    <div class="cards cards-3 mb-16">
+      <div class="card" style="border-top:3px solid var(--success);">
+        <div class="card-title" style="color:#15803D;">✅ Usuários internos</div>
+        <div class="card-body">
+          <div class="lic-big">~20</div>
+          <div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">Analistas PCTec + Itaú + admins</div>
+          <div style="margin-top:12px;font-size:13px;"><strong>Tipo:</strong> Sales Cloud Unlimited<br>(já existente)</div>
+          <div style="background:#ECFDF5;border-radius:6px;padding:8px;margin-top:8px;font-size:11px;color:#15803D;">Sem aquisição adicional necessária</div>
+        </div>
+      </div>
+      <div class="card" style="border-top:3px solid var(--itau-orange);">
+        <div class="card-title">❌ Fornecedores (portal)</div>
+        <div class="card-body">
+          <div class="lic-big">~90</div>
+          <div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">1 usuário por CNPJ</div>
+          <div style="margin-top:12px;font-size:13px;"><strong>Tipo:</strong> Experience Cloud<br>Partner Community</div>
+          <div class="warning-note" style="margin-top:8px;padding:8px;font-size:11px;"><strong>Avaliar:</strong> por login vs. por membro — acesso esporádico favorece "por login"; acesso diário favorece "por membro"</div>
+        </div>
+      </div>
+      <div class="card" style="border-top:3px solid var(--itau-blue);">
+        <div class="card-title">🔑 API Calls (Unlimited)</div>
+        <div class="card-body">
+          <div class="lic-big">100k</div>
+          <div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">calls/dia com ~20 licenças</div>
+          <div style="margin-top:12px;font-size:13px;"><strong>Unlimited:</strong> 5.000/licença/dia<br>(vs. 1.000 na Enterprise)</div>
+          <div style="background:#EBF2FF;border-radius:6px;padding:8px;margin-top:8px;font-size:11px;color:var(--itau-blue);">Margem confortável para o pipeline DigiBee</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Impacto financeiro do Unlimited Edition:</strong> Internos cobertos, CRM Analytics sem add-on, e 5× mais API calls que Enterprise. O único custo novo de licença para Fase 1 são as ~90 licenças Experience Cloud para o portal de fornecedores.
+    </div>
+  </section>
+
+  <!-- ===== MESA S&OE ===== -->
+  <section class="section" id="soe">
+    <div class="section-header">
+      <div class="section-icon">🗳️</div>
+      <div>
+        <h2>Mesa de Decisão S&OE (Fase 2)</h2>
+        <p>Interface Salesforce para a reunião semanal de priorização — com recomendação de IA por pauta</p>
+      </div>
+    </div>
+
+    <div class="note mb-24">
+      <strong>Posicionamento arquitetural (atualizado v2.0):</strong> O OMS computacional é uma plataforma <strong>AWS</strong> (em construção pelo time Itaú) — responsável pelo motor de priorização de estoque. A Mesa de Decisão S&OE no <strong>Salesforce</strong> é a <em>interface de decisão</em> que consome dados do OMS via DigiBee e permite que analistas registrem decisões e ajustes. Einstein gera o resumo executivo e a recomendação IA com base nos dados recebidos do OMS. Esta separação foi confirmada pelo Diagrama C1 (OMS [AWS]) + protótipo do Miro.
+    </div>
+
+    <div class="cards cards-2 mb-24">
+      <div class="card">
+        <div class="card-title">Cabeçalho da janela</div>
+        <div class="card-body" style="font-size:13px;">
+          <p><strong>S&OE — Mesa de Decisão Operacional</strong></p>
+          <p style="color:var(--text-secondary);margin:4px 0;">Janela: data início até data fim (ex: 20/08/26 – 27/08/26)</p>
+          <p style="margin-top:8px;"><strong>Filtros:</strong> Janela · Pauta (ex: INSS) · Priorização</p>
+          <p style="margin-top:8px;"><strong>Participantes:</strong> lista de analistas na sessão</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Resumo executivo (gerado por Einstein)</div>
+        <div class="card-body" style="font-size:13px;">
+          <p>A janela recebeu <strong>152 acionamentos</strong>.</p>
+          <p style="margin-top:4px;"><strong>93%</strong> da demanda pode ser atendida sem necessidade de intervenção humana.</p>
+          <p style="margin-top:4px;">Foram identificados <strong>3 itens</strong> que demandam decisão do fórum S&OE.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+            <span class="chip green">141 sem decisão (93%)</span>
+            <span class="chip orange">8 atenção (5%)</span>
+            <span class="chip" style="background:#FEF2F2;color:#B91C1C;">3 decisão obrigatória (2%)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-size:14px;font-weight:700;color:var(--itau-dark);margin-bottom:12px;">Pautas da sessão — dilemas com recomendação IA</h3>
+    <div class="table-wrap mb-16">
+      <table>
+        <thead><tr><th>#</th><th>Pauta</th><th>Prioridade</th><th>Dilema</th><th>Opções</th><th>Recomendação IA</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><strong>INSS</strong></td>
+            <td><span class="chip" style="background:#FEF2F2;color:#B91C1C;">Alta</span></td>
+            <td>Estoque disponível atende apenas 2 das 3 localidades</td>
+            <td>A: atender agências A e B (maior cobertura)<br>B: priorizar agência C (menor impacto regulatório)</td>
+            <td><span class="chip orange">Priorizar B</span> — menor impacto regulatório</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><strong>ATM Expansão</strong></td>
+            <td><span class="chip orange">Média</span></td>
+            <td>Capacidade logística não comporta todas as instalações na janela</td>
+            <td>A: priorizar SP (atraso RJ +12d)<br>B: priorizar RJ (atraso SP +9d)</td>
+            <td><span class="chip green">Priorizar A</span> — menor impacto no cronograma</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><strong>Mobiliário de Agências</strong></td>
+            <td><span class="chip orange">Média</span></td>
+            <td>Lead time do fornecedor acima do SLA esperado</td>
+            <td>A: manter prioridades atuais<br>B: redistribuir conforme disponibilidade</td>
+            <td><span class="chip orange">Priorizar B</span> — 6 agências com risco de atraso</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="cards cards-3">
+      <div class="card">
+        <div class="card-title">Componentes LWC</div>
+        <div class="card-body" style="font-size:12px;">
+          <code>soeJanelaHeader</code> — seleção de janela/pauta<br>
+          <code>soeResumoExecutivo</code> — resumo Einstein<br>
+          <code>soePautaCard</code> — dilema + opções + impacto<br>
+          <code>soeRegistrarDecisao</code> — captura decisão do fórum
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Dados necessários (Fase 2)</div>
+        <div class="card-body" style="font-size:12px;">
+          <code>Reserva__c</code> — 7 status: Intenção→Enviada<br>
+          <code>Pauta__c</code> — prioridade e classificação<br>
+          OMS [AWS] → DigiBee → SF: dilemas + saldo<br>
+          WMS Itaú → OMS → SF: disponibilidade lógica
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Pré-requisito de AI</div>
+        <div class="card-body" style="font-size:12px;">
+          Einstein precisa de: critérios de priorização parametrizados (configurados pelo time de operações), histórico de impactos regulatórios por pauta, e pesos de prioridade em <code>Pauta__c</code>.<br><br>
+          <span style="color:var(--itau-orange);">Não é black-box — as regras são configuráveis</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== IA ===== -->
+  <section class="section" id="ia">
+    <div class="section-header">
+      <div class="section-icon">🤖</div>
+      <div>
+        <h2>Inteligência Artificial — Roadmap Einstein / Agentforce</h2>
+        <p>Fase 1 sem AI (foco em dados). Fase 2 com capacidades específicas.</p>
+      </div>
+    </div>
+
+    <div class="cards cards-2 mb-24">
+      <div class="card" style="border-top:3px solid #94A3B8;">
+        <div class="card-title" style="color:#64748B;">Fase 1 — Sem AI</div>
+        <div class="card-body">
+          <p>A fase 1 não inclui AI. O volume de dados históricos no Salesforce é insuficiente para modelos confiáveis.</p>
+          <br>
+          <p>A prioridade é estabelecer a <strong>base de dados limpa e estruturada</strong> para que os modelos da fase 2 tenham fundação confiável.</p>
+          <br>
+          <p style="color:var(--text-secondary);font-size:12px;"><strong>Pré-requisito para Fase 2:</strong> mínimo de 6 meses de dados históricos no SF</p>
+        </div>
+      </div>
+      <div class="card" style="border-top:3px solid var(--itau-orange);">
+        <div class="card-title">Fase 2 — Einstein + Agentforce (OMS / S&OE)</div>
+        <div class="card-body">
+          <div class="warning-note" style="padding:8px;margin-bottom:12px;font-size:11px;">
+            <strong>Antecipado para Fase 2:</strong> O protótipo da Mesa de Decisão S&OE já prevê "Resumo executivo gerado por IA" e "Recomendação IA" por pauta. Einstein é parte central do design do OMS.
+          </div>
+          <div class="ai-phase">
+            <div class="ai-phase-num">1</div>
+            <div class="ai-phase-content">
+              <h4>Einstein — Resumo executivo S&OE</h4>
+              <p>Gera automaticamente o resumo da janela semanal: total de acionamentos, % sem decisão necessária, dilemas para o fórum</p>
+            </div>
+          </div>
+          <div class="ai-phase">
+            <div class="ai-phase-num">2</div>
+            <div class="ai-phase-content">
+              <h4>Einstein — Recomendação de priorização por pauta</h4>
+              <p>Para cada dilema (pauta com conflito de estoque), sugere opção A ou B com menor impacto regulatório / cronograma e justificativa</p>
+            </div>
+          </div>
+          <div class="ai-phase">
+            <div class="ai-phase-num">3</div>
+            <div class="ai-phase-content">
+              <h4>Einstein Email Classification</h4>
+              <p>Lê email do fornecedor → extrai status de produção e data proposta → atualiza Checkpoint__c sem intervenção humana</p>
+            </div>
+          </div>
+          <div class="ai-phase">
+            <div class="ai-phase-num">4</div>
+            <div class="ai-phase-content">
+              <h4>Einstein Prediction Builder</h4>
+              <p>Prediz probabilidade de atraso por fornecedor com base em histórico — prioriza atenção dos analistas</p>
+            </div>
+          </div>
+          <div class="ai-phase">
+            <div class="ai-phase-num">5</div>
+            <div class="ai-phase-content">
+              <h4>Agentforce — Suporte ao Fornecedor</h4>
+              <p>Chat autônomo no portal: responde dúvidas sobre status, documentação e contatos</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FASEAMENTO ===== -->
+  <section class="section" id="faseamento">
+    <div class="section-header">
+      <div class="section-icon">📅</div>
+      <div>
+        <h2>Sugestão de Faseamento Arquitetural</h2>
+        <p>Referência para o time de desenvolvimento — não um compromisso de entrega</p>
+      </div>
+    </div>
+
+    <div class="warning-note mb-24">
+      <strong>Nota:</strong> Esta sugestão é uma referência para o time de desenvolvimento priorizar capacidades. O arquiteto Salesforce não é responsável pela execução, cronograma ou entrega.
+    </div>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-label">Meses 1–2</div>
+        <div class="timeline-content">
+          <h4>Fundação</h4>
+          <ul>
+            <li>Modelo de dados completo</li>
+            <li>Perfis e Permission Sets</li>
+            <li>Integração DigiBee↔SAP (básica)</li>
+            <li>Flows de criação de pedido e checkpoint</li>
+          </ul>
+          <div class="timeline-dep">Blocker: contrato SAP/DigiBee + análise do org</div>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-label">Mês 3</div>
+        <div class="timeline-content">
+          <h4>Operação Interna</h4>
+          <ul>
+            <li>Email-to-Case</li>
+            <li>Flows de escalonamento</li>
+            <li>Dashboard CRM Analytics v1</li>
+            <li>Integração WMS AGV (FTP)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-label">Meses 4–5</div>
+        <div class="timeline-content">
+          <h4>Portal do Fornecedor</h4>
+          <ul>
+            <li>Experience Cloud LWR site</li>
+            <li>LWCs customizados</li>
+            <li>Onboarding piloto (~10 fornecedores)</li>
+          </ul>
+          <div class="timeline-dep">Blocker: aprovação COI/Segurança (usuário gest)</div>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="timeline-label">Mês 6</div>
+        <div class="timeline-content">
+          <h4>Rollout e Refinamento</h4>
+          <ul>
+            <li>Score de criticidade (Apex Batch)</li>
+            <li>Dashboard de performance v2</li>
+            <li>Rollout completo fornecedores</li>
+            <li>Documentação técnica</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== DEPENDÊNCIAS ===== -->
+  <section class="section" id="dependencias">
+    <div class="section-header">
+      <div class="section-icon">🚧</div>
+      <div>
+        <h2>Dependências Críticas</h2>
+        <p>Itens que bloqueiam o início ou o progresso do desenvolvimento</p>
+      </div>
+    </div>
+
+    <div class="risk-list">
+      <div class="risk-item">
+        <div class="risk-level blocker">🚫<div class="risk-label">BLOCKER</div></div>
+        <div class="risk-content">
+          <h4>Taxonomia canônica de entidades</h4>
+          <p>O que é "pedido", "reserva", "intervenção", "demanda" — diferentes sistemas usam termos diferentes. Deve ser definido antes de qualquer modelagem de dados.</p>
+          <div class="resp">Responsável: Arquitetura do banco + equipe operacional (Cássio, Guilherme)</div>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-level blocker">🚫<div class="risk-label">BLOCKER</div></div>
+        <div class="risk-content">
+          <h4>Contrato de integração SAP ↔ DigiBee</h4>
+          <p>Payload, campos obrigatórios, evento de trigger. Incluir obrigatoriamente: transação SAP de origem (ME51N/CN22/MB21/W31/W32), Código UPE da obra. Alterações após início geram retrabalho no modelo.</p>
+          <div class="resp">Responsável: Equipe SAP + DigiBee + Arquiteto SF</div>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-level high">⚠️<div class="risk-label">HIGH</div></div>
+        <div class="risk-content">
+          <h4>Governança de acesso Experience Cloud + Rainbow/Parcerias</h4>
+          <p>Modelo "usuário gest" para fornecedores precisa ser validado com COI e Segurança. Adicionalmente, validar se o <strong>Rainbow/Parcerias</strong> (plataforma corporativa de habilitação de terceiros) pode ser base de provisionamento do acesso ao portal SF — evita duplo cadastro.</p>
+          <div class="resp">Responsável: COI + Segurança Itaú + Time Rainbow + Product Owner</div>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-level high">⚠️<div class="risk-label">HIGH</div></div>
+        <div class="risk-content">
+          <h4>Alinhamento com OMS [AWS] — qual API o OMS expõe para a Mesa de Decisão SF?</h4>
+          <p>Na Fase 2, a Mesa de Decisão S&OE no Salesforce precisa consumir dados do OMS [AWS] (dilemas, priorização, disponibilidade) via DigiBee. O contrato de API deve ser definido em conjunto com o time de produto AWS e o Arquiteto SF.</p>
+          <div class="resp">Responsável: Time produto AWS + Arquiteto SF + Product Owner</div>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-level high">⚠️<div class="risk-label">HIGH</div></div>
+        <div class="risk-content">
+          <h4>Questão aberta C1: Baixa no SAP — quando?</h4>
+          <p>O Diagrama C1 aponta: <em>"faz sentido dar baixa no SAP? se sim, quando? na solicitação de separação?"</em> — decisão pendente. Define o trigger da integração write-back para Fase 2.</p>
+          <div class="resp">Responsável: Arquitetura + SAP + equipe operacional</div>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-level high">⚠️<div class="risk-label">HIGH</div></div>
+        <div class="risk-content">
+          <h4>Questão aberta C1: Geração de DC-e para reversa — quando?</h4>
+          <p>O Diagrama C1 aponta: <em>"em que momento devemos gerar DR pra logística reversa?"</em> — decisão pendente. Impacta o design do fluxo de reversa e a integração com o Gerador de DC-e [AWS].</p>
+          <div class="resp">Responsável: Arquitetura + Time TMS/AGV + equipe operacional</div>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-level high">⚠️<div class="risk-label">HIGH</div></div>
+        <div class="risk-content">
+          <h4>Análise do org Salesforce existente</h4>
+          <p>Estado atual do org de manutenção (namespace, limites de metadados, customizações existentes) pode revelar restrições que alteram decisões arquiteturais.</p>
+          <div class="resp">Responsável: Arquiteto SF + Admin do org (Fabian)</div>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-level medium">ℹ️<div class="risk-label">MEDIUM</div></div>
+        <div class="risk-content">
+          <h4>Disponibilidade do WMS Itaú [AWS]</h4>
+          <p>O WMS Itaú (estoque lógico) ainda não existe — é uma plataforma AWS em construção pelo time Itaú. O motor de priorização do OMS depende deste sistema. Define o ritmo da Fase 2.</p>
+          <div class="resp">Responsável: Time de plataforma AWS Itaú + Liderança</div>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-level medium">ℹ️<div class="risk-label">MEDIUM</div></div>
+        <div class="risk-content">
+          <h4>Integração EAM (Attune) → SF na Fase 2</h4>
+          <p>O EAM (produto: Attune, gerenciado pela área GIMEA) fornece catálogo de SKUs e inventário de agências. Na Fase 2, esses dados enriquecerão os registros SF. API ou DigiBee pipeline a definir.</p>
+          <div class="resp">Responsável: Time EAM/GIMEA + Arquiteto SF</div>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-level medium">ℹ️<div class="risk-label">MEDIUM</div></div>
+        <div class="risk-content">
+          <h4>Formato e campos do arquivo FTP da AGV</h4>
+          <p>Necessário para mapear o pipeline DigiBee de sincronização de estoque. Impacta apenas o módulo de Score de Criticidade.</p>
+          <div class="resp">Responsável: Time AGV + Arquiteto SF</div>
+        </div>
+      </div>
+      <div class="risk-item">
+        <div class="risk-level medium">ℹ️<div class="risk-label">MEDIUM</div></div>
+        <div class="risk-content">
+          <h4>Risco de sobreposição com projeto Acelera</h4>
+          <p>O Acelera estava construindo partes do OMS e integração TMS. Com a reestruturação, há risco de retrabalho ou conflito de escopo. Requer alinhamento antes do início.</p>
+          <div class="resp">Responsável: Fabrício + Liderança do projeto</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== LIMITES E RISCOS TÉCNICOS ===== -->
+  <section class="section" id="limites">
+    <div class="section-header">
+      <div class="section-icon">📊</div>
+      <div>
+        <h2>Governor Limits e Riscos Técnicos</h2>
+        <p>Limites Salesforce relevantes para este volume e arquitetura</p>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Área</th><th>Limite / Valor</th><th>Risco</th><th>Mitigação</th></tr></thead>
+        <tbody>
+          <tr class="limit-low">
+            <td><strong>API calls / dia</strong></td>
+            <td>5.000 × nº licenças (Unlimited)<br><small>~20 licenças = <strong>100.000/dia</strong></small></td>
+            <td><span class="chip green">Baixo</span> margem ampla para o pipeline DigiBee</td>
+            <td>Mesmo assim, DigiBee deve usar <strong>Bulk API 2.0</strong> na carga inicial histórica</td>
+          </tr>
+          <tr class="limit-high">
+            <td><strong>SOQL em Flows</strong></td>
+            <td>Limite de 50.000 linhas por transação</td>
+            <td><span class="chip orange">Alto</span> Scheduled Flows sem filtro eficiente</td>
+            <td>Sempre filtrar por <code>Status = Pendente AND Data_Disparo &lt;= NOW()</code> + índice no campo</td>
+          </tr>
+          <tr class="limit-medium">
+            <td><strong>Heap size Apex</strong></td>
+            <td>6 MB (síncrono) / 12 MB (async)</td>
+            <td><span class="chip" style="background:#FFF7E6;color:#B45309;">Médio</span> volumes > 1.000 pedidos simultâneos</td>
+            <td>Usar <strong>Batchable Apex</strong> para Score_Criticidade_Diario quando volume crescer</td>
+          </tr>
+          <tr class="limit-medium">
+            <td><strong>Flows simultâneos</strong></td>
+            <td>Limite de entrevistas por transação</td>
+            <td><span class="chip" style="background:#FFF7E6;color:#B45309;">Médio</span> Scheduled Flows concorrentes</td>
+            <td>Garantir que Checkpoint_Scheduler e Escalation_Escalator não rodem no mesmo minuto</td>
+          </tr>
+          <tr class="limit-low">
+            <td><strong>Email-to-Case</strong></td>
+            <td>1.000 mensagens/dia (padrão)</td>
+            <td><span class="chip green">Baixo</span> ~835 emails/mês = ~28/dia</td>
+            <td>Suficiente. Verificar contrato se volume crescer para escala maior</td>
+          </tr>
+          <tr class="limit-low">
+            <td><strong>Objetos customizados</strong></td>
+            <td>Limite varia por edição (Enterprise: 800+)</td>
+            <td><span class="chip green">Baixo</span> 5 objetos customizados novos</td>
+            <td>Verificar count atual do org de manutenção antes de iniciar</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  Blueprint de Arquitetura Salesforce — Itaú Suprimentos · Módulo de Acompanhamento de Compras · v2.0 · 2026-09-14 · Baseado em: Dores PDF, Diagrama C1, Briefing B2B, TO-BE v20260911
+</footer>
+
+<script>
+  // Sticky nav highlight
+  const sections = document.querySelectorAll('.section');
+  const navLinks = document.querySelectorAll('.nav a');
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(a => a.classList.remove('active'));
+        const active = document.querySelector(`.nav a[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+
+  // Smooth scroll
+  navLinks.forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const target = document.querySelector(link.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+</script>
+
+</body>
+</html>
