@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Blueprint de Modernização SLP — Itaú Logística</title>
+  <title>Programa de Transformação da Logística Bancária — Itaú</title>
   <style>
     /* LOGIN OVERLAY */
     #login-overlay {
@@ -288,25 +288,27 @@
 <!-- HEADER -->
 <header class="header">
   <div class="header-left">
-    <h1>Blueprint de Modernização SLP</h1>
-    <p>Itaú Logística — Readout Técnico de Arquitetura</p>
+    <h1>Programa de Transformação da Logística Bancária</h1>
+    <p>Itaú — Remodelação da área de Suprimentos e Logística</p>
     <div class="header-badges">
       <span class="badge">Setembro 2026</span>
-      <span class="badge">Hipótese de trabalho v0.1</span>
+      <span class="badge">Em construção — v0.1</span>
       <span class="badge orange">Salesforce — Workflow Runtime</span>
+      <span class="badge">5 frentes · 3 horizontes</span>
     </div>
   </div>
   <div class="header-kpis">
-    <div class="kpi"><div class="kpi-num">10</div><div class="kpi-label">Casos de uso</div></div>
+    <div class="kpi"><div class="kpi-num">5</div><div class="kpi-label">Frentes</div></div>
+    <div class="kpi"><div class="kpi-num">3</div><div class="kpi-label">Horizontes</div></div>
     <div class="kpi"><div class="kpi-num">8</div><div class="kpi-label">Interfaces</div></div>
     <div class="kpi"><div class="kpi-num">4</div><div class="kpi-label">Gates</div></div>
-    <div class="kpi"><div class="kpi-num">3</div><div class="kpi-label">Ondas</div></div>
   </div>
 </header>
 
 <!-- NAV -->
 <nav class="nav">
-  <a href="#visao">Visão Geral</a>
+  <a href="#programa">Programa</a>
+  <a href="#visao">Capacidades</a>
   <a href="#asis">Landscape As-Is</a>
   <a href="#arquitetura">Arq. Técnica</a>
   <a href="#matriz">Responsabilidades</a>
@@ -319,13 +321,137 @@
 
 <main class="main">
 
+  <!-- ===== PROGRAMA ===== -->
+  <section class="section" id="programa">
+    <div class="section-header">
+      <div class="section-icon">🏛️</div>
+      <div>
+        <h2>Estrutura do Programa</h2>
+        <p>Visão da transformação — da fragmentação operacional ao Supply Chain inteligente e integrado</p>
+      </div>
+    </div>
+
+    <div style="background:linear-gradient(135deg,var(--itau-blue) 0%,#001f6b 100%);border-radius:var(--radius);padding:28px 32px;margin-bottom:24px;color:white;text-align:center;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:0.7;margin-bottom:10px;">VISÃO DO PROGRAMA</div>
+      <div style="font-size:22px;font-weight:800;line-height:1.35;max-width:700px;margin:0 auto;">"Da operação fragmentada e manual ao Supply Chain inteligente, rastreável e integrado"</div>
+      <div style="margin-top:14px;font-size:13px;opacity:0.8;">Salesforce como Workflow Runtime · DigiBee como backbone de integração · Data Mesh como camada de inteligência</div>
+    </div>
+
+    <h3 style="font-size:14px;font-weight:700;color:var(--itau-dark);margin-bottom:12px;">5 frentes do programa</h3>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:28px;">
+      <div style="background:var(--itau-blue);color:white;border-radius:var(--radius);padding:16px;">
+        <div style="font-size:22px;margin-bottom:8px;">⚙️</div>
+        <div style="font-size:12px;font-weight:700;margin-bottom:6px;">Processos &amp; Modelo Operacional</div>
+        <div style="font-size:11px;opacity:0.85;line-height:1.5;">Redesenho de jornadas, handoffs e responsabilidades; eliminação de trabalho manual</div>
+      </div>
+      <div style="background:var(--itau-blue);color:white;border-radius:var(--radius);padding:16px;">
+        <div style="font-size:22px;margin-bottom:8px;">☁️</div>
+        <div style="font-size:12px;font-weight:700;margin-bottom:6px;">Plataforma Salesforce</div>
+        <div style="font-size:11px;opacity:0.85;line-height:1.5;">Workflow Runtime, orquestração, regras de negócio, portais e IA</div>
+      </div>
+      <div style="background:var(--itau-orange);color:white;border-radius:var(--radius);padding:16px;">
+        <div style="font-size:22px;margin-bottom:8px;">🔗</div>
+        <div style="font-size:12px;font-weight:700;margin-bottom:6px;">Integrações &amp; Dados</div>
+        <div style="font-size:11px;opacity:0.85;line-height:1.5;">DigiBee como backbone; contratos canônicos; Data Mesh; Control Tower</div>
+      </div>
+      <div style="background:var(--itau-orange);color:white;border-radius:var(--radius);padding:16px;">
+        <div style="font-size:22px;margin-bottom:8px;">🌐</div>
+        <div style="font-size:12px;font-weight:700;margin-bottom:6px;">Experiência &amp; Canais</div>
+        <div style="font-size:11px;opacity:0.85;line-height:1.5;">Portal do fornecedor, Experience Cloud para parceiros externos; visibilidade ponta a ponta</div>
+      </div>
+      <div style="background:var(--itau-dark);color:white;border-radius:var(--radius);padding:16px;">
+        <div style="font-size:22px;margin-bottom:8px;">🏛️</div>
+        <div style="font-size:12px;font-weight:700;margin-bottom:6px;">Governança &amp; Mudança</div>
+        <div style="font-size:11px;opacity:0.85;line-height:1.5;">RACI, owners, treinamento, adoção, comunicação e gestão do programa</div>
+      </div>
+    </div>
+
+    <h3 style="font-size:14px;font-weight:700;color:var(--itau-dark);margin-bottom:12px;">3 horizontes de transformação</h3>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px;">
+      <div style="border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);">
+        <div style="background:var(--itau-orange);color:white;padding:16px 18px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;opacity:0.85;">Horizonte 1 · 0–6 meses</div>
+          <div style="font-size:18px;font-weight:800;margin-top:4px;">Foundation</div>
+        </div>
+        <div style="background:white;padding:16px 18px;border:1px solid var(--border);border-top:none;">
+          <div style="font-size:12px;color:var(--text-secondary);line-height:1.7;">
+            <p style="margin-bottom:4px;">✓ Diagnóstico e baseline dos processos</p>
+            <p style="margin-bottom:4px;">✓ Arquitetura aprovada (G1 + G2)</p>
+            <p style="margin-bottom:4px;">✓ Foundation e segurança (G3)</p>
+            <p style="margin-bottom:4px;">✓ MVP Lighthouse — Logística Reversa</p>
+            <p>✓ Primeiras integrações críticas</p>
+          </div>
+        </div>
+      </div>
+      <div style="border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);">
+        <div style="background:var(--itau-blue);color:white;padding:16px 18px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;opacity:0.85;">Horizonte 2 · 6–18 meses</div>
+          <div style="font-size:18px;font-weight:800;margin-top:4px;">Integração</div>
+        </div>
+        <div style="background:white;padding:16px 18px;border:1px solid var(--border);border-top:none;">
+          <div style="font-size:12px;color:var(--text-secondary);line-height:1.7;">
+            <p style="margin-bottom:4px;">✓ Sistemas conectados via DigiBee</p>
+            <p style="margin-bottom:4px;">✓ Visibilidade ponta a ponta ativa</p>
+            <p style="margin-bottom:4px;">✓ Portal do fornecedor em produção</p>
+            <p style="margin-bottom:4px;">✓ Control Tower operacional</p>
+            <p>✓ Jornadas prioritárias escaladas</p>
+          </div>
+        </div>
+      </div>
+      <div style="border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);">
+        <div style="background:var(--itau-dark);color:white;padding:16px 18px;">
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;opacity:0.85;">Horizonte 3 · 18+ meses</div>
+          <div style="font-size:18px;font-weight:800;margin-top:4px;">Inteligência</div>
+        </div>
+        <div style="background:white;padding:16px 18px;border:1px solid var(--border);border-top:none;">
+          <div style="font-size:12px;color:var(--text-secondary);line-height:1.7;">
+            <p style="margin-bottom:4px;">✓ IA preditiva e otimização de rotas</p>
+            <p style="margin-bottom:4px;">✓ Abastecimento autônomo de agências</p>
+            <p style="margin-bottom:4px;">✓ Data Mesh completo (5 domínios)</p>
+            <p style="margin-bottom:4px;">✓ Agentforce em operações críticas</p>
+            <p>✓ Benchmark de excelência logística</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-size:14px;font-weight:700;color:var(--itau-dark);margin-bottom:12px;">Métricas de resultado esperadas do programa</h3>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;">
+      <div style="background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);border:1px solid var(--border);text-align:center;">
+        <div style="font-size:24px;font-weight:800;color:var(--itau-orange);">−80%</div>
+        <div style="font-size:12px;font-weight:600;color:var(--itau-dark);margin-top:4px;">Trabalho manual</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:3px;line-height:1.4;">e-mails, planilhas e follow-up manual</div>
+      </div>
+      <div style="background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);border:1px solid var(--border);text-align:center;">
+        <div style="font-size:24px;font-weight:800;color:var(--itau-orange);">+95%</div>
+        <div style="font-size:12px;font-weight:600;color:var(--itau-dark);margin-top:4px;">Visibilidade OTIF</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:3px;line-height:1.4;">rastreabilidade ponta a ponta</div>
+      </div>
+      <div style="background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);border:1px solid var(--border);text-align:center;">
+        <div style="font-size:24px;font-weight:800;color:var(--itau-orange);">−60%</div>
+        <div style="font-size:12px;font-weight:600;color:var(--itau-dark);margin-top:4px;">Tempo de ciclo</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:3px;line-height:1.4;">do pedido à entrega confirmada</div>
+      </div>
+      <div style="background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);border:1px solid var(--border);text-align:center;">
+        <div style="font-size:24px;font-weight:800;color:var(--itau-orange);">100%</div>
+        <div style="font-size:12px;font-weight:600;color:var(--itau-dark);margin-top:4px;">Evidência digital</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:3px;line-height:1.4;">de todas as movimentações e aprovações</div>
+      </div>
+      <div style="background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);border:1px solid var(--border);text-align:center;">
+        <div style="font-size:24px;font-weight:800;color:var(--itau-orange);">1 fonte</div>
+        <div style="font-size:12px;font-weight:600;color:var(--itau-dark);margin-top:4px;">Verdade única</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:3px;line-height:1.4;">para demanda, estoque e ativo</div>
+      </div>
+    </div>
+  </section>
+
   <!-- ===== VISÃO GERAL ===== -->
   <section class="section" id="visao">
     <div class="section-header">
       <div class="section-icon">🗺️</div>
       <div>
         <h2>Mapa de Capacidades de Negócio</h2>
-        <p>Visão ponta a ponta da logística bancária e papel potencial do Salesforce</p>
+        <p>Escopo do programa — visão ponta a ponta da logística bancária e papel do Salesforce em cada domínio</p>
       </div>
     </div>
 
@@ -528,7 +654,7 @@
 
     <div class="arch-diagram">
       <h3 style="font-size:13px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">Canais de acesso</h3>
-      <div class="arch-channels mb-24">
+      <div class="arch-channels mb-24" style="grid-template-columns:repeat(3,1fr);">
         <div class="arch-channel">
           <div class="icon">💻</div>
           <div class="label">Workspace do Analista</div>
@@ -543,15 +669,9 @@
         </div>
         <div class="arch-channel">
           <div class="icon">🏭</div>
-          <div class="label">Portal do Fornecedor</div>
-          <div class="sublabel">Experience Cloud</div>
+          <div class="label">Portais Externos</div>
+          <div class="sublabel">Fornecedores, transportadoras e parceiros — Experience Cloud</div>
           <div style="margin-top:6px;"><span class="chip green" style="font-size:10px;">SF</span></div>
-        </div>
-        <div class="arch-channel">
-          <div class="icon">💬</div>
-          <div class="label">WhatsApp / Portal da Transportadora</div>
-          <div class="sublabel">Canal a pacificar</div>
-          <div style="margin-top:6px;"><span class="chip orange" style="font-size:10px;">A definir</span></div>
         </div>
       </div>
 
@@ -705,8 +825,8 @@
             <td><strong>Experiência de parceiros</strong></td>
             <td>Salesforce / canal</td>
             <td>Identidade, jornada e evidências</td>
-            <td><span class="chip">Web / Messaging</span></td>
-            <td>Experience Cloud, WhatsApp ou híbrido?</td>
+            <td><span class="chip">Web / Experience Cloud</span></td>
+            <td>Escopo, perfis e segmentação do EC</td>
           </tr>
           <tr>
             <td><span class="status-dot decision"></span></td>
@@ -884,58 +1004,78 @@
     <div class="section-header">
       <div class="section-icon">📱</div>
       <div>
-        <h2>Canais Externos — Critérios de Decisão e Guardrails</h2>
-        <p>Experience Cloud, WhatsApp ou composição híbrida para parceiros e transportadoras</p>
+        <h2>Canais Externos — Experience Cloud para Parceiros</h2>
+        <p>Critérios de implementação, capacidades e gate de aprovação Foundation</p>
       </div>
     </div>
 
     <div class="cards cards-2 mb-24">
       <div>
+        <h3 style="font-size:13px;font-weight:700;color:var(--itau-dark);margin-bottom:12px;">Experience Cloud — avaliação de capacidades</h3>
         <div class="table-wrap">
-          <table class="chan-table">
+          <table>
             <thead>
               <tr>
-                <th class="crit" style="text-align:left;">Critério de decisão</th>
-                <th class="ec">Experience Cloud</th>
-                <th class="wa">WhatsApp</th>
-                <th class="hybrid" style="background:var(--itau-orange);">Híbrido</th>
+                <th>Capacidade</th>
+                <th style="text-align:center;">Aderência</th>
+                <th>Observação</th>
               </tr>
             </thead>
             <tbody>
-              <tr><td class="label">Identidade e autorização</td><td><span class="dot-full">●</span></td><td><span class="dot-open">○</span></td><td><span class="dot-open">○</span></td></tr>
-              <tr><td class="label">Complexidade da tarefa</td><td><span class="dot-full">●</span></td><td><span class="dot-dash">—</span></td><td><span class="dot-full">●</span></td></tr>
-              <tr><td class="label">Leitura de QR / câmera</td><td><span class="dot-full">●</span></td><td><span class="dot-open">○</span></td><td><span class="dot-full">●</span></td></tr>
-              <tr><td class="label">Fotos e evidências</td><td><span class="dot-full">●</span></td><td><span class="dot-full">●</span></td><td><span class="dot-full">●</span></td></tr>
-              <tr><td class="label">Conectividade de campo</td><td><span class="dot-open">○</span></td><td><span class="dot-full">●</span></td><td><span class="dot-full">●</span></td></tr>
-              <tr><td class="label">Comunicação proativa</td><td><span class="dot-open">○</span></td><td><span class="dot-full">●</span></td><td><span class="dot-full">●</span></td></tr>
-              <tr><td class="label">Auditoria e retenção</td><td><span class="dot-full">●</span></td><td><span class="dot-open">○</span></td><td><span class="dot-full">●</span></td></tr>
-              <tr><td class="label">Escala e licenciamento</td><td><span class="dot-open">○</span></td><td><span class="dot-full">●</span></td><td><span class="dot-open">○</span></td></tr>
-              <tr><td class="label">Suporte e operação</td><td><span class="dot-open">○</span></td><td><span class="dot-full">●</span></td><td><span class="dot-open">○</span></td></tr>
+              <tr><td>Identidade e autorização externa</td><td style="text-align:center;"><span class="dot-full" style="color:var(--itau-blue);">●</span></td><td style="font-size:12px;">Self-registration, SSO, perfis por empresa</td></tr>
+              <tr><td>Jornadas complexas (múltiplos passos)</td><td style="text-align:center;"><span class="dot-full" style="color:var(--itau-blue);">●</span></td><td style="font-size:12px;">Forms, wizards, aprovações, checklists</td></tr>
+              <tr><td>Leitura de QR Code / câmera</td><td style="text-align:center;"><span class="dot-full" style="color:var(--itau-blue);">●</span></td><td style="font-size:12px;">Mobile browser + LWC nativo</td></tr>
+              <tr><td>Upload de fotos e evidências</td><td style="text-align:center;"><span class="dot-full" style="color:var(--itau-blue);">●</span></td><td style="font-size:12px;">Files + Salesforce Content</td></tr>
+              <tr><td>Auditoria e retenção de dados</td><td style="text-align:center;"><span class="dot-full" style="color:var(--itau-blue);">●</span></td><td style="font-size:12px;">Field history, compliance retention</td></tr>
+              <tr><td>Notificações proativas (e-mail / in-app)</td><td style="text-align:center;"><span class="dot-full" style="color:var(--itau-blue);">●</span></td><td style="font-size:12px;">Flow + Marketing Cloud ou e-mail básico</td></tr>
+              <tr><td>Autorização granular por empresa e papel</td><td style="text-align:center;"><span class="dot-full" style="color:var(--itau-blue);">●</span></td><td style="font-size:12px;">OWD + Sharing Rules + Permission Sets</td></tr>
+              <tr><td>Conectividade em campo (mobile offline)</td><td style="text-align:center;"><span class="dot-open" style="color:var(--itau-orange);">○</span></td><td style="font-size:12px;">Requer rede; offline limitado</td></tr>
+              <tr><td>Escala / custo por usuário externo</td><td style="text-align:center;"><span class="dot-open" style="color:var(--itau-orange);">○</span></td><td style="font-size:12px;">Licença Experience Cloud — validar com Salesforce</td></tr>
             </tbody>
           </table>
         </div>
         <div style="display:flex;gap:12px;margin-top:10px;font-size:11px;flex-wrap:wrap;">
-          <span><span class="dot-full" style="color:var(--itau-blue);">●</span> Aderência maior</span>
-          <span><span class="dot-open" style="color:var(--itau-orange);">○</span> Atenção / Dependência</span>
-          <span><span class="dot-dash">—</span> Aderência limitada</span>
+          <span><span class="dot-full" style="color:var(--itau-blue);">●</span> Alta aderência</span>
+          <span><span class="dot-open" style="color:var(--itau-orange);">○</span> Atenção / dependência</span>
         </div>
       </div>
       <div>
         <div class="card" style="border-top:3px solid var(--itau-dark);margin-bottom:12px;">
           <div class="card-title">Gate de aprovação — Foundation</div>
           <div class="card-body" style="font-size:12px;">
-            <p style="margin-bottom:8px;display:flex;align-items:center;gap:8px;"><span style="font-size:16px;">👤</span><strong>1. Identidade externa</strong></p>
+            <p style="margin-bottom:8px;display:flex;align-items:center;gap:8px;"><span style="font-size:16px;">👤</span><strong>1. Identidade externa e Rainbow/Parcerias</strong></p>
             <p style="margin-bottom:8px;display:flex;align-items:center;gap:8px;"><span style="font-size:16px;">🔐</span><strong>2. Autorização por empresa e papel</strong></p>
-            <p style="margin-bottom:8px;display:flex;align-items:center;gap:8px;"><span style="font-size:16px;">📄</span><strong>3. Consentimento e templates</strong></p>
+            <p style="margin-bottom:8px;display:flex;align-items:center;gap:8px;"><span style="font-size:16px;">📄</span><strong>3. Consentimento, LGPD e templates</strong></p>
             <p style="margin-bottom:8px;display:flex;align-items:center;gap:8px;"><span style="font-size:16px;">🗄️</span><strong>4. Classificação e retenção de dados</strong></p>
-            <p style="margin-bottom:8px;display:flex;align-items:center;gap:8px;"><span style="font-size:16px;">💳</span><strong>5. Licenciamento e limites</strong></p>
+            <p style="margin-bottom:8px;display:flex;align-items:center;gap:8px;"><span style="font-size:16px;">💳</span><strong>5. Licenciamento e limites de API</strong></p>
             <p style="display:flex;align-items:center;gap:8px;"><span style="font-size:16px;">📊</span><strong>6. Logs, monitoramento e suporte</strong></p>
           </div>
         </div>
-        <div class="warning-note">
-          <strong>Hipótese:</strong> O modelo híbrido tende a equilibrar adesão e controle, mas só deve ser recomendado após validação de Foundation, Cyber, Operação e Arquitetura.
+        <div class="cards cards-2" style="gap:10px;">
+          <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:var(--radius);padding:14px;">
+            <div style="font-size:12px;font-weight:700;color:#166534;margin-bottom:6px;">Perfis previstos</div>
+            <div style="font-size:11px;color:#166534;line-height:1.6;">
+              <p>Fornecedor (fabricante)</p>
+              <p>Transportadora / Motorista</p>
+              <p>Parceiro logístico</p>
+              <p>AGV — operação Cajamar</p>
+            </div>
+          </div>
+          <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:var(--radius);padding:14px;">
+            <div style="font-size:12px;font-weight:700;color:var(--itau-blue);margin-bottom:6px;">Funcionalidades alvo</div>
+            <div style="font-size:11px;color:var(--itau-blue);line-height:1.6;">
+              <p>Status de produção</p>
+              <p>Agendamento de coleta</p>
+              <p>Comprovantes e evidências</p>
+              <p>Notificações e alertas</p>
+            </div>
+          </div>
         </div>
       </div>
+    </div>
+
+    <div class="warning-note">
+      <strong>Pré-requisito:</strong> O acesso de empresas externas ao Itaú exige habilitação via <strong>Rainbow / Parcerias</strong> (plataforma corporativa de governança de terceiros). Nenhum portal externo deve ser colocado em produção antes desta aprovação.
     </div>
   </section>
 
@@ -1166,9 +1306,9 @@
       <div class="risk-item">
         <div class="risk-level high"><span>⚠️</span><div class="risk-label">HIGH</div></div>
         <div class="risk-content">
-          <h4>Canal externo para transportadoras — Experience Cloud, WhatsApp ou Híbrido?</h4>
-          <p>A tabela de canais mostra trade-offs claros: EC tem maior controle e auditoria; WhatsApp tem maior adoção em campo. O modelo híbrido equilibra os dois, mas requer validação de Foundation, Cyber e Operação antes de ser recomendado.</p>
-          <div class="resp">Owner sugerido: Foundation + Cyber + Experiência digital + Operação</div>
+          <h4>Escopo e segmentação do Experience Cloud para parceiros externos</h4>
+          <p>Quais perfis externos terão acesso (fornecedores, transportadoras, AGV, outros parceiros) e quais funcionalidades cada perfil acessa? A segmentação define o modelo de licenciamento, o esforço de desenvolvimento e o gate Foundation necessário.</p>
+          <div class="resp">Owner sugerido: Foundation + Cyber + Experiência digital + Product Owner</div>
         </div>
       </div>
       <div class="risk-item">
@@ -1201,7 +1341,7 @@
 </main>
 
 <footer class="footer">
-  Blueprint de Modernização SLP — Itaú Logística · Readout Técnico de Arquitetura · v0.1 · Setembro 2026 · Hipótese de trabalho — sujeita à pacificação Foundation
+  Programa de Transformação da Logística Bancária — Itaú · v0.1 · Setembro 2026 · Hipótese de trabalho — sujeita à pacificação Foundation
 </footer>
 
 <script>
