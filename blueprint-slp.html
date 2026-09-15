@@ -29,6 +29,45 @@
     .login-error { margin-top: 14px; padding: 10px 14px; background: #FEF2F2; border: 1px solid #FCA5A5; border-radius: 8px; color: #B91C1C; font-size: 13px; display: none; }
     .login-error.show { display: block; }
     .login-footer { margin-top: 20px; font-size: 11px; color: #9CA3AF; }
+
+    /* SELECTION OVERLAY */
+    #selection-overlay {
+      position: fixed; inset: 0; z-index: 9998;
+      background: linear-gradient(135deg, #001f6b 0%, #003DA5 100%);
+      display: flex; align-items: center; justify-content: center;
+    }
+    #selection-overlay.hidden { display: none; }
+    .sel-box {
+      text-align: center; color: white; padding: 24px;
+      max-width: 760px; width: 100%;
+    }
+    .sel-box h2 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+    .sel-box > p { font-size: 14px; opacity: .75; margin-bottom: 32px; }
+    .sel-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .sel-card {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 16px; padding: 28px 24px; text-align: left; cursor: pointer;
+      transition: background .2s, transform .2s, border-color .2s;
+    }
+    .sel-card:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.5); transform: translateY(-2px); }
+    .sel-card.new { border-color: #EC7000; background: rgba(236,112,0,.1); }
+    .sel-card.new:hover { background: rgba(236,112,0,.2); }
+    .sel-version { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; opacity: .7; margin-bottom: 8px; }
+    .sel-card.new .sel-version { color: #EC7000; opacity: 1; }
+    .sel-card h3 { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+    .sel-card p { font-size: 13px; opacity: .75; line-height: 1.6; margin-bottom: 18px; }
+    .sel-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+    .sel-tag { font-size: 11px; padding: 3px 10px; border-radius: 20px; background: rgba(255,255,255,.15); }
+    .sel-card.new .sel-tag { background: rgba(236,112,0,.3); }
+    .sel-btn {
+      width: 100%; padding: 11px; border-radius: 8px; font-size: 14px; font-weight: 700;
+      cursor: pointer; border: none; transition: background .2s; font-family: inherit;
+    }
+    .sel-card:not(.new) .sel-btn { background: white; color: #003DA5; }
+    .sel-card:not(.new) .sel-btn:hover { background: #EFF6FF; }
+    .sel-card.new .sel-btn { background: #EC7000; color: white; }
+    .sel-card.new .sel-btn:hover { background: #d4620b; }
+    .sel-footer { margin-top: 20px; font-size: 12px; opacity: .5; }
   </style>
   <style>
     :root {
@@ -285,6 +324,41 @@
   </div>
 </div>
 
+<!-- SELECTION OVERLAY -->
+<div id="selection-overlay" class="hidden">
+  <div class="sel-box">
+    <h2>Itaú Suprimentos</h2>
+    <p>Selecione o blueprint que deseja visualizar</p>
+    <div class="sel-cards">
+      <div class="sel-card" onclick="selectV1()">
+        <div class="sel-version">v1.0</div>
+        <h3>Programa de Transformação</h3>
+        <p>Visão do programa, mapa de capacidades, arquitetura técnica, catálogo de interfaces e roadmap</p>
+        <div class="sel-tags">
+          <span class="sel-tag">5 frentes</span>
+          <span class="sel-tag">3 horizontes</span>
+          <span class="sel-tag">8 interfaces</span>
+          <span class="sel-tag">Roadmap G1–G4</span>
+        </div>
+        <button class="sel-btn">Abrir v1.0 →</button>
+      </div>
+      <div class="sel-card new" onclick="selectV2()">
+        <div class="sel-version">✨ v2.0 — Novo</div>
+        <h3>SF como Maestro &amp; Agentforce</h3>
+        <p>Salesforce como orquestrador de workflows, 6 agentes de IA e comparativo antes × depois dos processos</p>
+        <div class="sel-tags">
+          <span class="sel-tag">Workflow Orchestration</span>
+          <span class="sel-tag">6 Agentes IA</span>
+          <span class="sel-tag">State Machine</span>
+          <span class="sel-tag">−80% manual</span>
+        </div>
+        <button class="sel-btn">Abrir v2.0 →</button>
+      </div>
+    </div>
+    <div class="sel-footer">Acesso restrito · Itaú Suprimentos · Setembro 2026</div>
+  </div>
+</div>
+
 <!-- HEADER -->
 <header class="header">
   <div class="header-left">
@@ -310,6 +384,9 @@
   <a href="#programa">Programa</a>
   <a href="#visao">Capacidades</a>
   <a href="#asis">Landscape As-Is</a>
+  <div style="margin-left:auto;display:flex;align-items:center;">
+    <a href="#" onclick="sessionStorage.removeItem('itau_v_selected');showSelection();return false;" style="color:#003DA5;font-weight:600;font-size:12px;border:1px solid #E2E8F0;border-radius:6px;padding:6px 12px;text-decoration:none;background:white;margin:auto 0;">⇄ Trocar versão</a>
+  </div>
   <a href="#arquitetura">Arq. Técnica</a>
   <a href="#matriz">Responsabilidades</a>
   <a href="#interfaces">Interfaces</a>
@@ -1345,12 +1422,36 @@
 </footer>
 
 <script>
+  const SESS_KEY = 'itau_bp_auth';
+  const V_KEY    = 'itau_v_selected';
+
+  function showSelection() {
+    document.getElementById('selection-overlay').classList.remove('hidden');
+  }
+  function hideSelection() {
+    document.getElementById('selection-overlay').classList.add('hidden');
+  }
+  function selectV1() {
+    sessionStorage.setItem(V_KEY, 'v1');
+    hideSelection();
+  }
+  function selectV2() {
+    sessionStorage.removeItem(V_KEY);
+    window.location.href = 'blueprint-maestro.html';
+  }
+
   (function () {
-    const SESS_KEY = 'itau_slp_auth';
-    const overlay  = document.getElementById('login-overlay');
-    const form     = document.getElementById('login-form');
-    const errorEl  = document.getElementById('login-error');
-    if (sessionStorage.getItem(SESS_KEY) === '1') { overlay.classList.add('hidden'); }
+    const overlay = document.getElementById('login-overlay');
+    const form    = document.getElementById('login-form');
+    const errorEl = document.getElementById('login-error');
+
+    if (sessionStorage.getItem(SESS_KEY) === '1') {
+      overlay.classList.add('hidden');
+      if (sessionStorage.getItem(V_KEY) !== 'v1') {
+        showSelection();
+      }
+    }
+
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       const user = document.getElementById('login-user').value.trim();
@@ -1359,6 +1460,7 @@
         sessionStorage.setItem(SESS_KEY, '1');
         overlay.classList.add('hidden');
         errorEl.classList.remove('show');
+        showSelection();
       } else {
         errorEl.classList.add('show');
         document.getElementById('login-pass').value = '';

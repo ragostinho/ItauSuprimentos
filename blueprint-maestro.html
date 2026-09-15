@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Salesforce como Maestro — Orquestração & Agentforce · Itaú</title>
+  <style>
+    #login-overlay { position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#003DA5 0%,#001f6b 100%);display:flex;align-items:center;justify-content:center; }
+    #login-overlay.hidden { display:none; }
+    .login-box { background:#fff;border-radius:16px;padding:48px 40px;width:100%;max-width:380px;box-shadow:0 24px 64px rgba(0,0,0,0.3);text-align:center; }
+    .login-logo { width:56px;height:56px;background:#003DA5;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px; }
+    .login-box h1 { font-size:20px;font-weight:700;color:#1A1A2E;margin-bottom:4px; }
+    .login-box p { font-size:13px;color:#6B6B6B;margin-bottom:28px; }
+    .login-field { margin-bottom:16px;text-align:left; }
+    .login-field label { display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px; }
+    .login-field input { width:100%;padding:10px 14px;border:1.5px solid #D1D5DB;border-radius:8px;font-size:14px;outline:none;transition:border-color .2s;font-family:inherit; }
+    .login-field input:focus { border-color:#003DA5; }
+    .login-btn { width:100%;padding:12px;background:#003DA5;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;transition:background .2s;font-family:inherit; }
+    .login-btn:hover { background:#002d7a; }
+    .login-error { margin-top:14px;padding:10px 14px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:8px;color:#B91C1C;font-size:13px;display:none; }
+    .login-error.show { display:block; }
+    .login-footer { margin-top:20px;font-size:11px;color:#9CA3AF; }
+  </style>
+  <style>
+    :root {
+      --blue:#003DA5; --orange:#EC7000; --dark:#1A1A2E;
+      --bg:#F4F6FA; --card:#FFFFFF; --text:#1C1C1E; --muted:#6B6B6B;
+      --border:#E2E8F0; --green:#22C55E; --warn:#F59E0B; --red:#EF4444;
+      --radius:12px; --shadow:0 2px 12px rgba(0,0,0,0.08);
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);}
+    .hidden{display:none!important;}
+
+    /* HEADER */
+    .header{background:linear-gradient(135deg,#001f6b 0%,#003DA5 60%,#1a4fa8 100%);color:white;padding:32px 48px 28px;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;}
+    .header-left h1{font-size:24px;font-weight:800;letter-spacing:-.3px;}
+    .header-left p{font-size:14px;opacity:.75;margin-top:4px;}
+    .header-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+    .badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:500;}
+    .badge.ora{background:rgba(236,112,0,.35);border-color:var(--orange);}
+    .badge.ai{background:rgba(124,58,237,.35);border-color:#8B5CF6;}
+    .header-kpis{display:flex;gap:20px;}
+    .kpi{text-align:center;}
+    .kpi-num{font-size:28px;font-weight:800;color:var(--orange);line-height:1;}
+    .kpi-lab{font-size:11px;opacity:.7;margin-top:3px;text-transform:uppercase;letter-spacing:.5px;}
+
+    /* NAV */
+    .nav{background:var(--card);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;padding:0 48px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+    .nav a{text-decoration:none;color:var(--muted);padding:14px 14px;font-size:13px;font-weight:500;border-bottom:2px solid transparent;white-space:nowrap;transition:color .2s,border-color .2s;}
+    .nav a:hover{color:var(--blue);}
+    .nav a.active{color:var(--blue);border-color:var(--orange);font-weight:600;}
+    .nav-back{margin-left:auto;display:flex;align-items:center;}
+    .nav-back a{color:var(--blue);font-weight:600;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:6px 12px;text-decoration:none;}
+    .nav-back a:hover{background:#EFF6FF;}
+
+    /* LAYOUT */
+    .main{max-width:1200px;margin:0 auto;padding:40px 48px 80px;}
+    .section{margin-bottom:64px;scroll-margin-top:56px;}
+    .sec-header{display:flex;align-items:center;gap:12px;margin-bottom:24px;}
+    .sec-icon{width:36px;height:36px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:16px;flex-shrink:0;}
+    .sec-icon.ora{background:var(--orange);}
+    .sec-icon.ai{background:#7C3AED;}
+    .sec-header h2{font-size:20px;font-weight:700;color:var(--dark);}
+    .sec-header p{font-size:13px;color:var(--muted);margin-top:2px;}
+
+    .grid{display:grid;gap:16px;}
+    .g2{grid-template-columns:repeat(2,1fr);}
+    .g3{grid-template-columns:repeat(3,1fr);}
+    .g5{grid-template-columns:repeat(5,1fr);}
+    @media(max-width:900px){.g2,.g3,.g5{grid-template-columns:1fr;}}
+
+    .card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);border:1px solid var(--border);}
+    .card-title{font-size:14px;font-weight:700;color:var(--dark);margin-bottom:8px;}
+    .card-body{font-size:13px;color:var(--muted);line-height:1.6;}
+    .mb16{margin-bottom:16px;} .mb24{margin-bottom:24px;}
+
+    .note{background:#EFF6FF;border-left:4px solid var(--blue);padding:14px 16px;border-radius:0 8px 8px 0;font-size:13px;color:#1e3a6e;line-height:1.6;}
+    .warn-note{background:#FFFBEB;border-left:4px solid var(--warn);padding:14px 16px;border-radius:0 8px 8px 0;font-size:13px;color:#78350f;line-height:1.6;}
+    .ora-note{background:#FFF7ED;border-left:4px solid var(--orange);padding:14px 16px;border-radius:0 8px 8px 0;font-size:13px;color:#7c2d12;line-height:1.6;}
+    .ai-note{background:#F5F3FF;border-left:4px solid #7C3AED;padding:14px 16px;border-radius:0 8px 8px 0;font-size:13px;color:#4C1D95;line-height:1.6;}
+
+    .chip{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:#EFF6FF;color:var(--blue);}
+    .chip.ora{background:#FFF7ED;color:#C2410C;}
+    .chip.grn{background:#F0FDF4;color:#166534;}
+    .chip.ai{background:#F5F3FF;color:#6D28D9;}
+    .chip.dark{background:var(--dark);color:white;}
+    .chip.gray{background:#F3F4F6;color:#374151;}
+
+    /* TABLE */
+    .table-wrap{overflow-x:auto;border-radius:var(--radius);box-shadow:var(--shadow);}
+    table{width:100%;border-collapse:collapse;background:var(--card);font-size:13px;}
+    th{background:var(--dark);color:white;padding:12px 14px;text-align:left;font-size:12px;font-weight:600;letter-spacing:.3px;}
+    td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:top;}
+    tr:last-child td{border-bottom:none;}
+    tr:hover td{background:#F8FAFC;}
+
+    /* ====== MAESTRO SECTION ====== */
+    .maestro-compare{display:grid;grid-template-columns:1fr 2px 1fr 2px 1fr;gap:0;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:24px;}
+    .maestro-col{padding:24px;}
+    .maestro-divider{background:var(--border);}
+    .maestro-col.crm{background:#FEF2F2;}
+    .maestro-col.maestro{background:#EFF6FF;}
+    .maestro-col.result{background:#F0FDF4;}
+    .maestro-col h4{font-size:13px;font-weight:700;margin-bottom:12px;}
+    .maestro-col.crm h4{color:#B91C1C;}
+    .maestro-col.maestro h4{color:var(--blue);}
+    .maestro-col.result h4{color:#166534;}
+    .maestro-item{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;font-size:12px;line-height:1.5;}
+
+    /* ====== CAPABILITY CARDS ====== */
+    .cap-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px;}
+    @media(max-width:1000px){.cap-cards{grid-template-columns:repeat(2,1fr);}}
+    .cap-card{border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);}
+    .cap-card-head{padding:14px 16px;color:white;font-size:12px;font-weight:700;}
+    .cap-card-head.b1{background:var(--blue);}
+    .cap-card-head.b2{background:#1e4ab8;}
+    .cap-card-head.b3{background:#0f3d9e;}
+    .cap-card-head.o1{background:var(--orange);}
+    .cap-card-head.o2{background:#d4620b;}
+    .cap-card-body{background:white;padding:12px 16px;border:1px solid var(--border);border-top:none;font-size:12px;color:var(--muted);line-height:1.5;}
+
+    /* ====== ORCHESTRATION ARCH ====== */
+    .arch{background:var(--card);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);border:1px solid var(--border);}
+    .arch-layer{margin-bottom:10px;}
+    .arch-layer-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;}
+    .arch-layer-items{display:flex;gap:8px;flex-wrap:wrap;}
+    .arch-item{padding:8px 14px;border-radius:6px;font-size:12px;font-weight:500;}
+    .arch-item.input{background:#F3F4F6;color:#374151;border:1px solid #E5E7EB;}
+    .arch-item.sf{background:var(--blue);color:white;}
+    .arch-item.sf-light{background:#EFF6FF;color:var(--blue);border:1px solid #BFDBFE;}
+    .arch-item.sor{background:var(--dark);color:white;}
+    .arch-item.data{background:#4C1D95;color:white;}
+    .arch-item.digibee{background:var(--orange);color:white;}
+    .arch-arrow-row{display:flex;align-items:center;justify-content:center;height:20px;margin-bottom:2px;}
+    .arch-arrow{font-size:18px;color:var(--muted);}
+
+    /* ====== STATE MACHINE ====== */
+    .sm-flow{display:flex;align-items:center;gap:0;overflow-x:auto;padding:20px;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);}
+    .sm-state{flex-shrink:0;}
+    .sm-box{border-radius:8px;padding:10px 16px;text-align:center;min-width:100px;}
+    .sm-box.active{background:var(--blue);color:white;}
+    .sm-box.warn{background:var(--warn);color:white;}
+    .sm-box.muted{background:#F3F4F6;color:#374151;border:1px solid #E5E7EB;}
+    .sm-name{font-size:12px;font-weight:700;}
+    .sm-who{font-size:10px;opacity:.75;margin-top:3px;}
+    .sm-arrow-wrap{display:flex;flex-direction:column;align-items:center;margin:0 4px;flex-shrink:0;}
+    .sm-arrow{width:36px;height:2px;background:var(--border);position:relative;}
+    .sm-arrow::after{content:'';position:absolute;right:-1px;top:-4px;border:5px solid transparent;border-left-color:var(--border);}
+    .sm-trigger{font-size:9px;color:var(--orange);font-weight:700;text-align:center;margin-top:4px;white-space:nowrap;}
+
+    /* ====== AGENT CARDS ====== */
+    .agent-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden;margin-bottom:16px;}
+    .agent-head{display:flex;align-items:center;gap:16px;padding:18px 20px;background:linear-gradient(135deg,#001f6b,#003DA5);}
+    .agent-emoji{font-size:32px;flex-shrink:0;}
+    .agent-head-text{flex:1;}
+    .agent-head-text h3{font-size:16px;font-weight:700;color:white;}
+    .agent-sub{font-size:12px;color:rgba(255,255,255,.7);margin-top:3px;}
+    .agent-impact{text-align:right;flex-shrink:0;}
+    .agent-impact-num{font-size:22px;font-weight:800;color:var(--orange);}
+    .agent-impact-lab{font-size:10px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.5px;}
+    .agent-body{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:0;}
+    .agent-col{padding:16px 18px;border-right:1px solid var(--border);}
+    .agent-col:last-child{border-right:none;}
+    .agent-col h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px;}
+    .agent-col p,.agent-col li{font-size:12px;color:var(--text);line-height:1.6;}
+    .agent-col ul{padding-left:14px;}
+    .agent-col li{margin-bottom:4px;}
+    .agent-esc li{color:#B45309;}
+    .agent-foot{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--border);}
+    .agent-before{background:#FEF2F2;padding:12px 18px;}
+    .agent-after{background:#F0FDF4;padding:12px 18px;}
+    .agent-before h5{font-size:10px;font-weight:700;color:#B91C1C;text-transform:uppercase;margin-bottom:5px;}
+    .agent-after h5{font-size:10px;font-weight:700;color:#166534;text-transform:uppercase;margin-bottom:5px;}
+    .agent-before p,.agent-after p{font-size:12px;line-height:1.5;}
+    .agent-before p{color:#7F1D1D;}
+    .agent-after p{color:#14532D;}
+
+    /* ====== BEFORE/AFTER JOURNEYS ====== */
+    .ba-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden;margin-bottom:16px;}
+    .ba-title{padding:14px 20px;background:var(--dark);color:white;font-size:14px;font-weight:700;}
+    .ba-body{display:grid;grid-template-columns:1fr 1fr;}
+    .ba-before{padding:20px;background:#FFF5F5;}
+    .ba-after{padding:20px;background:#F0F9FF;border-left:1px solid var(--border);}
+    .ba-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;}
+    .ba-before .ba-label{color:#B91C1C;}
+    .ba-after .ba-label{color:var(--blue);}
+    .ba-step{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;}
+    .ba-dot{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px;}
+    .ba-before .ba-dot{background:#FCA5A5;color:#7F1D1D;}
+    .ba-after .ba-dot{background:#BFDBFE;color:var(--blue);}
+    .ba-step p{font-size:12px;line-height:1.5;color:var(--text);}
+    .ba-metric{margin-top:14px;padding:10px 14px;border-radius:8px;font-size:12px;font-weight:600;}
+    .ba-before .ba-metric{background:#FEE2E2;color:#991B1B;}
+    .ba-after .ba-metric{background:#DBEAFE;color:#1E40AF;}
+
+    /* ====== FOUNDATION CHECKLIST ====== */
+    .check-group{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);border:1px solid var(--border);}
+    .check-group-title{font-size:13px;font-weight:700;color:var(--dark);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+    .check-item{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;}
+    .check-icon{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:1px;}
+    .check-icon.must{background:#DBEAFE;color:var(--blue);}
+    .check-icon.dep{background:#FEF3C7;color:#92400E;}
+    .check-icon.nice{background:#D1FAE5;color:#065F46;}
+    .check-item p{font-size:12px;line-height:1.5;color:var(--text);}
+    .check-item strong{color:var(--dark);}
+
+    /* ====== PHASING ====== */
+    .phase-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+    @media(max-width:900px){.phase-grid{grid-template-columns:1fr;}}
+    .phase-col{border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);}
+    .phase-head{padding:16px 18px;color:white;}
+    .phase-head.h1{background:var(--orange);}
+    .phase-head.h2{background:var(--blue);}
+    .phase-head.h3{background:#7C3AED;}
+    .phase-head-sub{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.8;}
+    .phase-head-title{font-size:18px;font-weight:800;margin-top:4px;}
+    .phase-body{background:white;padding:16px 18px;border:1px solid var(--border);border-top:none;}
+    .phase-agent{display:flex;gap:10px;align-items:center;margin-bottom:10px;padding:8px 10px;border-radius:6px;}
+    .phase-agent.ready{background:#F0FDF4;border:1px solid #BBF7D0;}
+    .phase-agent.dep{background:#FFF7ED;border:1px solid #FED7AA;}
+    .phase-agent.future{background:#F5F3FF;border:1px solid #DDD6FE;}
+    .pa-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;color:white;}
+    .pa-num.h1c{background:var(--orange);}
+    .pa-num.h2c{background:var(--blue);}
+    .pa-num.h3c{background:#7C3AED;}
+    .pa-text{flex:1;}
+    .pa-name{font-size:12px;font-weight:600;color:var(--dark);}
+    .pa-dep{font-size:11px;color:var(--muted);margin-top:2px;}
+
+    footer.footer{background:var(--dark);color:rgba(255,255,255,.5);text-align:center;padding:20px;font-size:12px;}
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-overlay">
+  <div class="login-box">
+    <div class="login-logo">🏦</div>
+    <h1>Itaú Suprimentos</h1>
+    <p>Blueprint de Arquitetura — v2.0</p>
+    <form id="login-form" autocomplete="off">
+      <div class="login-field"><label>Usuário</label><input id="lu" type="text" autofocus /></div>
+      <div class="login-field"><label>Senha</label><input id="lp" type="password" /></div>
+      <button class="login-btn" type="submit">Entrar</button>
+      <div class="login-error" id="lerr">Usuário ou senha incorretos.</div>
+    </form>
+    <div class="login-footer">Acesso restrito · Itaú Suprimentos</div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <h1>Salesforce como Maestro — Orquestração &amp; Agentforce</h1>
+    <p>Além do CRM: processo, workflow e IA agêntica para a logística bancária</p>
+    <div class="header-badges">
+      <span class="badge">Setembro 2026</span>
+      <span class="badge">v2.0</span>
+      <span class="badge ora">Workflow Runtime</span>
+      <span class="badge ai">✨ Agentforce</span>
+    </div>
+  </div>
+  <div class="header-kpis">
+    <div class="kpi"><div class="kpi-num">5</div><div class="kpi-lab">Capacidades</div></div>
+    <div class="kpi"><div class="kpi-num">6</div><div class="kpi-lab">Agentes IA</div></div>
+    <div class="kpi"><div class="kpi-num">−80%</div><div class="kpi-lab">Trabalho manual</div></div>
+    <div class="kpi"><div class="kpi-num">3</div><div class="kpi-lab">Horizontes</div></div>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="#maestro">O Maestro</a>
+  <a href="#orquestracao">Orquestração</a>
+  <a href="#statemachine">State Machine</a>
+  <a href="#agentforce">Agentforce</a>
+  <a href="#antesdepois">Antes × Depois</a>
+  <a href="#foundation">Foundation</a>
+  <a href="#faseamento">Faseamento</a>
+  <div class="nav-back"><a href="blueprint-slp.html">← v1.0 · Programa</a></div>
+</nav>
+
+<main class="main">
+
+  <!-- ===== O MAESTRO ===== -->
+  <section class="section" id="maestro">
+    <div class="sec-header">
+      <div class="sec-icon">🎼</div>
+      <div>
+        <h2>Salesforce como Maestro — além do CRM</h2>
+        <p>A virada conceitual: SF não é o sistema de execução — é o sistema de coordenação</p>
+      </div>
+    </div>
+
+    <div class="maestro-compare mb24">
+      <div class="maestro-col crm">
+        <h4>❌ SF como CRM tradicional</h4>
+        <div class="maestro-item"><span>📇</span><span>Gestão de leads, oportunidades e contas</span></div>
+        <div class="maestro-item"><span>📧</span><span>E-mail tracking e tarefas de vendas</span></div>
+        <div class="maestro-item"><span>📊</span><span>Dashboards de pipeline e forecast</span></div>
+        <div class="maestro-item"><span>⚠️</span><span>Não resolve handoffs entre sistemas</span></div>
+        <div class="maestro-item"><span>⚠️</span><span>Não mantém estado de processos externos</span></div>
+        <div class="maestro-item"><span>⚠️</span><span>Não orquestra atores múltiplos</span></div>
+      </div>
+      <div class="maestro-divider"></div>
+      <div class="maestro-col maestro">
+        <h4>✅ SF como Maestro de Orquestração</h4>
+        <div class="maestro-item"><span>🔀</span><span>Mantém estado de cada demanda ponta a ponta</span></div>
+        <div class="maestro-item"><span>⚡</span><span>Distribui trabalho para o ator certo no momento certo</span></div>
+        <div class="maestro-item"><span>📏</span><span>Aplica regras, SLA e escalação automaticamente</span></div>
+        <div class="maestro-item"><span>🔌</span><span>Reage a eventos dos outros sistemas via DigiBee</span></div>
+        <div class="maestro-item"><span>🤖</span><span>Delega trabalho repetitivo para agentes de IA</span></div>
+        <div class="maestro-item"><span>📋</span><span>Coleta evidências e auditoria em cada etapa</span></div>
+      </div>
+      <div class="maestro-divider"></div>
+      <div class="maestro-col result">
+        <h4>🎯 O que muda para o Itaú</h4>
+        <div class="maestro-item"><span>✓</span><span>Analistas focam em decisão, não em follow-up</span></div>
+        <div class="maestro-item"><span>✓</span><span>Estado visível em tempo real para todos os atores</span></div>
+        <div class="maestro-item"><span>✓</span><span>Exceções tratadas com contexto completo</span></div>
+        <div class="maestro-item"><span>✓</span><span>Evidências auditáveis, sem planilhas manuais</span></div>
+        <div class="maestro-item"><span>✓</span><span>Agentes de IA tratam o volume; humanos tratam exceções</span></div>
+        <div class="maestro-item"><span>✓</span><span>Processos reprojetados, não apenas digitalizados</span></div>
+      </div>
+    </div>
+
+    <h3 style="font-size:14px;font-weight:700;color:var(--dark);margin-bottom:12px;">As 5 capacidades plataforma que sustentam o Maestro</h3>
+    <div class="cap-cards">
+      <div class="cap-card">
+        <div class="cap-card-head b1">1 · Flow Orchestration</div>
+        <div class="cap-card-body">Processos multi-etapa, multi-ator com decisões condicionais, timeouts e escalação. Cada demanda vira um processo com estado explícito e owner em cada passo.</div>
+      </div>
+      <div class="cap-card">
+        <div class="cap-card-head b2">2 · State Machine</div>
+        <div class="cap-card-body">Máquina de estado explícita por objeto (reserva, ordem, reversa). Transições controladas por regras — o SF é a única fonte de verdade do estado do processo.</div>
+      </div>
+      <div class="cap-card">
+        <div class="cap-card-head b3">3 · Omni-Channel Routing</div>
+        <div class="cap-card-body">Distribuição automática de trabalho para o analista certo por disponibilidade, skill e carga. Fim da fila manual e do "quem pega esse?"</div>
+      </div>
+      <div class="cap-card">
+        <div class="cap-card-head o1">4 · Platform Events</div>
+        <div class="cap-card-body">SF escuta eventos de TMS, WMS, SAP via DigiBee e reage automaticamente — atualiza estado, notifica, aciona próxima etapa sem polling manual.</div>
+      </div>
+      <div class="cap-card">
+        <div class="cap-card-head o2">5 · Audit Trail + Evidence</div>
+        <div class="cap-card-body">Cada transição, aprovação, upload, assinatura e exceção gravada no objeto — não em e-mail. Auditoria fiscal e compliance nativa, sem esforço adicional.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ORQUESTRAÇÃO ===== -->
+  <section class="section" id="orquestracao">
+    <div class="sec-header">
+      <div class="sec-icon">⚙️</div>
+      <div>
+        <h2>Modelo de Orquestração em Camadas</h2>
+        <p>SF como sistema nervoso central — DigiBee como backbone; sistemas especialistas preservam a execução</p>
+      </div>
+    </div>
+
+    <div class="arch mb24">
+      <div class="arch-layer">
+        <div class="arch-layer-label">Entrada de demanda (canais)</div>
+        <div class="arch-layer-items">
+          <div class="arch-item input">🌐 Portal de Reservas (Angular/AWS)</div>
+          <div class="arch-item input">🗄️ SAP — ME51N / CN22 / MB21 / W31 / W32</div>
+          <div class="arch-item input">🔧 EAM / Octagon (Attune) — ativos</div>
+          <div class="arch-item input">🏭 Portais Externos — fornecedores e parceiros (EC)</div>
+        </div>
+      </div>
+      <div class="arch-arrow-row"><div class="arch-arrow">↕</div></div>
+
+      <div class="arch-layer" style="background:#EFF6FF;border-radius:var(--radius);padding:16px;border:2px solid var(--blue);margin-bottom:8px;">
+        <div class="arch-layer-label" style="color:var(--blue);">Salesforce — Workflow Runtime (O Maestro)</div>
+        <div class="arch-layer-items" style="margin-bottom:10px;">
+          <div class="arch-item sf">🔀 Flow Orchestration</div>
+          <div class="arch-item sf">🔄 State Machine</div>
+          <div class="arch-item sf">📋 Work Distribution (Omni-Channel)</div>
+          <div class="arch-item sf">📏 Regras de negócio e SLA</div>
+          <div class="arch-item sf">📂 Evidence &amp; Audit</div>
+        </div>
+        <div class="arch-layer-items">
+          <div class="arch-item sf-light">🤖 Agente Triador</div>
+          <div class="arch-item sf-light">📧 Agente Follow-up</div>
+          <div class="arch-item sf-light">📅 Agente Agendamento</div>
+          <div class="arch-item sf-light">↩️ Agente Reversa</div>
+          <div class="arch-item sf-light">🧠 Agente S&amp;OE</div>
+          <div class="arch-item sf-light">⚖️ Agente Reconciliação</div>
+        </div>
+      </div>
+      <div class="arch-arrow-row"><div class="arch-arrow">↕</div></div>
+
+      <div class="arch-layer" style="background:#FFF7ED;border-radius:var(--radius);padding:12px;border:2px dashed var(--orange);margin-bottom:8px;">
+        <div class="arch-layer-label" style="color:var(--orange);">DigiBee — API Gateway + Integration Bus (barramento único)</div>
+        <div class="arch-layer-items">
+          <div class="arch-item digibee">API Management</div>
+          <div class="arch-item digibee">Modelo canônico + roteamento</div>
+          <div class="arch-item digibee">OAuth / mTLS / políticas</div>
+          <div class="arch-item digibee">Adapters + eventos</div>
+          <div class="arch-item digibee">Logs + retry + replay</div>
+        </div>
+      </div>
+      <div class="arch-arrow-row"><div class="arch-arrow">↕</div></div>
+
+      <div class="arch-layer">
+        <div class="arch-layer-label">Sistemas especialistas — Systems of Record (execução transacional)</div>
+        <div class="arch-layer-items">
+          <div class="arch-item sor">🗄️ SAP/ERP — compras, fiscal, pagamentos</div>
+          <div class="arch-item sor">🏭 AGV/WMS — estoque, armazém</div>
+          <div class="arch-item sor">🚚 TMS — transporte, coleta, entrega</div>
+          <div class="arch-item sor">🔧 EAM/Octagon (Attune) — ativos</div>
+        </div>
+      </div>
+      <div class="arch-arrow-row"><div class="arch-arrow">↕</div></div>
+
+      <div class="arch-layer">
+        <div class="arch-layer-label">Inteligência e visibilidade</div>
+        <div class="arch-layer-items">
+          <div class="arch-item data">📊 Control Tower + BI</div>
+          <div class="arch-item data">🗂️ Data Mesh (Demanda · Inventário · Transporte · Ativos · Financeiro)</div>
+          <div class="arch-item data">🤖 Agentforce — telemetria e aprendizado</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Princípio central:</strong> nenhum sistema de execução (SAP, TMS, WMS, EAM) é substituído. O SF orquestra <em>quando</em> acionar cada um, <em>o que</em> passar para eles e <em>o que</em> fazer com a resposta. Cada SoR mantém sua execução transacional intacta.
+    </div>
+  </section>
+
+  <!-- ===== STATE MACHINE ===== -->
+  <section class="section" id="statemachine">
+    <div class="sec-header">
+      <div class="sec-icon ora">🔄</div>
+      <div>
+        <h2>State Machine — Ciclo de Vida da Demanda no SF</h2>
+        <p>O SF é a única fonte de verdade do estado — transições controladas por regras, não por e-mail</p>
+      </div>
+    </div>
+
+    <div class="sm-flow mb24">
+      <div class="sm-state">
+        <div class="sm-box muted"><div class="sm-name">Intenção</div><div class="sm-who">Portal / SAP</div></div>
+      </div>
+      <div class="sm-arrow-wrap">
+        <div class="sm-arrow"></div>
+        <div class="sm-trigger">I-01 recebida</div>
+      </div>
+      <div class="sm-state">
+        <div class="sm-box active"><div class="sm-name">Acionada</div><div class="sm-who">Agente Triador</div></div>
+      </div>
+      <div class="sm-arrow-wrap">
+        <div class="sm-arrow"></div>
+        <div class="sm-trigger">WMS verifica</div>
+      </div>
+      <div class="sm-state">
+        <div class="sm-box warn"><div class="sm-name">Congelada</div><div class="sm-who">Falta estoque</div></div>
+      </div>
+      <div class="sm-arrow-wrap">
+        <div class="sm-arrow"></div>
+        <div class="sm-trigger">Mesa S&OE</div>
+      </div>
+      <div class="sm-state">
+        <div class="sm-box active"><div class="sm-name">Priorizada</div><div class="sm-who">Coordenador</div></div>
+      </div>
+      <div class="sm-arrow-wrap">
+        <div class="sm-arrow"></div>
+        <div class="sm-trigger">TMS aceita</div>
+      </div>
+      <div class="sm-state">
+        <div class="sm-box active"><div class="sm-name">Enviada</div><div class="sm-who">TMS + AGV</div></div>
+      </div>
+    </div>
+
+    <div class="grid g2 mb24">
+      <div>
+        <div class="sm-flow" style="flex-direction:column;align-items:flex-start;gap:8px;">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Estados de exceção</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <div class="sm-box warn" style="min-width:80px;"><div class="sm-name">Despriorizada</div><div class="sm-who">Mesa S&OE</div></div>
+            <div class="sm-box warn" style="min-width:80px;"><div class="sm-name">Reprogramada</div><div class="sm-who">Fornecedor / Ops</div></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Transição</th><th>Quem dispara</th><th>SF reage</th></tr></thead>
+            <tbody>
+              <tr><td>Intenção → Acionada</td><td>DigiBee (evento I-01)</td><td>Agente Triador classifica e distribui</td></tr>
+              <tr><td>Acionada → Congelada</td><td>WMS reporta sem estoque</td><td>Abre worklist na Mesa S&OE</td></tr>
+              <tr><td>Congelada → Priorizada</td><td>Coordenador aprova</td><td>SF envia ordem ao TMS (I-04)</td></tr>
+              <tr><td>Priorizada → Enviada</td><td>TMS confirma coleta</td><td>Fecha ciclo, notifica solicitante</td></tr>
+              <tr><td>Qualquer → Reprogramada</td><td>Fornecedor / Ops</td><td>Recalcula SLA, reagenda notificações</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="ora-note">
+      <strong>Regra de ouro:</strong> Nenhuma transição de estado deve ser feita fora do SF. Se um analista move status numa planilha ou e-mail, o Maestro perde a visibilidade. O sucesso depende de todos os atores (incluindo fornecedores via EC) registrarem suas ações no SF.
+    </div>
+  </section>
+
+  <!-- ===== AGENTFORCE ===== -->
+  <section class="section" id="agentforce">
+    <div class="sec-header">
+      <div class="sec-icon ai">🤖</div>
+      <div>
+        <h2>Agentforce — Os 6 Agentes de IA</h2>
+        <p>Cada agente resolve uma dor específica do As-Is, reduz trabalho manual e libera os analistas para decisão</p>
+      </div>
+    </div>
+
+    <div class="ai-note mb24">
+      <strong>O que é Agentforce:</strong> Agentes autônomos nativos do Salesforce que executam Flows, chamam APIs e tomam ações — não apenas respondem perguntas. Cada agente tem um conjunto de "tools" (ações que pode realizar), um escopo de autorização e critérios de escalação para humanos. Ações irreversíveis acima de threshold sempre passam por aprovação humana.
+    </div>
+
+    <!-- Agente 1 -->
+    <div class="agent-card">
+      <div class="agent-head">
+        <div class="agent-emoji">🗂️</div>
+        <div class="agent-head-text">
+          <h3>Agente 1 — Triador de Demanda</h3>
+          <div class="agent-sub">Flow Orchestration + Agentforce · Acionado por evento I-01</div>
+        </div>
+        <div class="agent-impact"><div class="agent-impact-num">−25h</div><div class="agent-impact-lab">por mês (triagem manual)</div></div>
+      </div>
+      <div class="agent-body">
+        <div class="agent-col">
+          <h4>Gatilho</h4>
+          <p>Nova reserva chega via DigiBee (I-01) — Portal de Reservas ou transação SAP (ME51N, CN22, MB21, W31, W32)</p>
+        </div>
+        <div class="agent-col">
+          <h4>Ações autônomas</h4>
+          <ul>
+            <li>Classifica tipo: obra / manutenção / dia-a-dia</li>
+            <li>Consulta WMS para disponibilidade de estoque</li>
+            <li>Aplica classificação de criticidade ABC</li>
+            <li>Determina prazo e SLA pelo tipo + criticidade</li>
+            <li>Distribui para a fila correta via Omni-Channel</li>
+            <li>Cria registro completo no SF com evidência de entrada</li>
+          </ul>
+        </div>
+        <div class="agent-col">
+          <h4>Escalona quando</h4>
+          <ul class="agent-esc">
+            <li>Classificação ambígua (tipo não reconhecido)</li>
+            <li>Conflito de prioridade entre reservas simultâneas</li>
+            <li>Reserva com criticidade A + sem estoque</li>
+          </ul>
+        </div>
+      </div>
+      <div class="agent-foot">
+        <div class="agent-before"><h5>Antes</h5><p>Analista lê e-mail, abre planilha, classifica manualmente, distribui para a pessoa certa — 15-20 min por reserva nas horas de pico</p></div>
+        <div class="agent-after"><h5>Depois</h5><p>Classificado e distribuído em segundos. Analista só entra quando o agente escalona exceção — menos de 20% dos casos</p></div>
+      </div>
+    </div>
+
+    <!-- Agente 2 -->
+    <div class="agent-card">
+      <div class="agent-head">
+        <div class="agent-emoji">📧</div>
+        <div class="agent-head-text">
+          <h3>Agente 2 — Gestor de Follow-up com Fornecedor</h3>
+          <div class="agent-sub">Agentforce + Experience Cloud · Monitoramento contínuo de SLA</div>
+        </div>
+        <div class="agent-impact"><div class="agent-impact-num">−835</div><div class="agent-impact-lab">e-mails/mês</div></div>
+      </div>
+      <div class="agent-body">
+        <div class="agent-col">
+          <h4>Gatilho</h4>
+          <p>Prazo de resposta do fornecedor se aproxima (D-10, D-3) sem atualização no portal</p>
+        </div>
+        <div class="agent-col">
+          <h4>Ações autônomas</h4>
+          <ul>
+            <li>Verifica se fornecedor atualizou status no EC</li>
+            <li>Envia lembrete personalizado via portal (não e-mail)</li>
+            <li>Lê e interpreta resposta do fornecedor</li>
+            <li>Atualiza status da reserva no SF</li>
+            <li>Recalcula SLA se houve mudança de data</li>
+            <li>Registra evidência de cada interação</li>
+          </ul>
+        </div>
+        <div class="agent-col">
+          <h4>Escalona quando</h4>
+          <ul class="agent-esc">
+            <li>Sem resposta após 2 tentativas</li>
+            <li>Data prometida mudou mais de X dias</li>
+            <li>Fornecedor reporta problema de produção</li>
+            <li>Pedido crítico em risco de atraso</li>
+          </ul>
+        </div>
+      </div>
+      <div class="agent-foot">
+        <div class="agent-before"><h5>Antes</h5><p>"Boa tarde, tudo bem? Qual o status da produção?" × 835/mês. Analistas gastam ~35% do tempo apenas atualizando controles manuais</p></div>
+        <div class="agent-after"><h5>Depois</h5><p>Agente faz 80% dos follow-ups automaticamente. Analista só entra nos casos com risco real ou fornecedor não-responsivo</p></div>
+      </div>
+    </div>
+
+    <!-- Agente 3 -->
+    <div class="agent-card">
+      <div class="agent-head">
+        <div class="agent-emoji">📅</div>
+        <div class="agent-head-text">
+          <h3>Agente 3 — Orquestrador de Agendamento AGV</h3>
+          <div class="agent-sub">Agentforce + DigiBee → TMS · Elimina o ping-pong</div>
+        </div>
+        <div class="agent-impact"><div class="agent-impact-num">0</div><div class="agent-impact-lab">ping-pong manuais</div></div>
+      </div>
+      <div class="agent-body">
+        <div class="agent-col">
+          <h4>Gatilho</h4>
+          <p>Reserva aprovada, estoque confirmado, TMS pronto para receber ordem de transporte</p>
+        </div>
+        <div class="agent-col">
+          <h4>Ações autônomas</h4>
+          <ul>
+            <li>Consulta disponibilidade de slots na AGV via DigiBee</li>
+            <li>Aplica regras de capacidade (inbound + reversa + outros fluxos)</li>
+            <li>Propõe 3 opções de slot para o fornecedor via EC</li>
+            <li>Confirma a escolha e cria agendamento no TMS</li>
+            <li>Notifica AGV, fornecedor e transportadora</li>
+            <li>Atualiza estado da reserva para "Priorizada"</li>
+          </ul>
+        </div>
+        <div class="agent-col">
+          <h4>Escalona quando</h4>
+          <ul class="agent-esc">
+            <li>Nenhum slot disponível nos próximos X dias</li>
+            <li>Conflito de capacidade com outros fluxos (reversa, projetos)</li>
+            <li>Fornecedor rejeita todos os slots propostos</li>
+          </ul>
+        </div>
+      </div>
+      <div class="agent-foot">
+        <div class="agent-before"><h5>Antes</h5><p>Itaú age como intermediário: fornecedor pede slot → Itaú consulta AGV → AGV responde → Itaú repassa. Cada ciclo = 2–3 dias e 4–6 e-mails</p></div>
+        <div class="agent-after"><h5>Depois</h5><p>Agente fecha o agendamento diretamente — sem humano no meio para casos padrão. Ciclo de horas, não dias</p></div>
+      </div>
+    </div>
+
+    <!-- Agente 4 -->
+    <div class="agent-card">
+      <div class="agent-head">
+        <div class="agent-emoji">↩️</div>
+        <div class="agent-head-text">
+          <h3>Agente 4 — Classificador e Orquestrador de Reversa</h3>
+          <div class="agent-sub">Agentforce + Flow Orchestration · 4 tipos oficiais de reversa</div>
+        </div>
+        <div class="agent-impact"><div class="agent-impact-num">100%</div><div class="agent-impact-lab">classificação correta</div></div>
+      </div>
+      <div class="agent-body">
+        <div class="agent-col">
+          <h4>Gatilho</h4>
+          <p>Solicitação de reversa recebida via EC ou Portal de Reservas — qualquer ator pode iniciar</p>
+        </div>
+        <div class="agent-col">
+          <h4>Ações autônomas</h4>
+          <ul>
+            <li>Faz perguntas guiadas ao solicitante via portal</li>
+            <li>Classifica: insucesso de entrega / entrega casada / pura encerramento / pura projeto / dia-a-dia</li>
+            <li>Aciona o workflow exato para o tipo identificado</li>
+            <li>Solicita evidências específicas para aquele tipo</li>
+            <li>Cria ordem de coleta no TMS</li>
+            <li>Atualiza EAM / Octagon (Attune) se for ativo</li>
+          </ul>
+        </div>
+        <div class="agent-col">
+          <h4>Escalona quando</h4>
+          <ul class="agent-esc">
+            <li>Tipo não se encaixa em nenhum dos 4 padrões</li>
+            <li>Item de alto valor ou ativo crítico</li>
+            <li>Divergência entre o que o solicitante diz e o sistema registra</li>
+          </ul>
+        </div>
+      </div>
+      <div class="agent-foot">
+        <div class="agent-before"><h5>Antes</h5><p>Classificação manual e sujeita a erro — tipo errado = workflow errado = retrabalho. Portais de reversa e descarte desconectados</p></div>
+        <div class="agent-after"><h5>Depois</h5><p>Tipo sempre correto desde o início. Workflow certo acionado automaticamente. Evidências específicas por tipo coletadas no ato</p></div>
+      </div>
+    </div>
+
+    <!-- Agente 5 -->
+    <div class="agent-card">
+      <div class="agent-head">
+        <div class="agent-emoji">🧠</div>
+        <div class="agent-head-text">
+          <h3>Agente 5 — Assistente da Mesa S&amp;OE</h3>
+          <div class="agent-sub">Agentforce + CRM Analytics · Monitoramento contínuo e alertas contextuais</div>
+        </div>
+        <div class="agent-impact"><div class="agent-impact-num">Proativo</div><div class="agent-impact-lab">vs. reativo</div></div>
+      </div>
+      <div class="agent-body">
+        <div class="agent-col">
+          <h4>Gatilho</h4>
+          <p>Contínuo — monitora backlog, SLAs e KPIs em tempo real. Também acionado por solicitação do analista ("O que está em risco hoje?")</p>
+        </div>
+        <div class="agent-col">
+          <h4>Ações autônomas</h4>
+          <ul>
+            <li>Detecta reservas com SLA em risco antes do vencimento</li>
+            <li>Identifica padrões: fornecedor com alto índice de atraso</li>
+            <li>Responde perguntas do analista com contexto completo</li>
+            <li>Sugere repriorização baseada em criticidade + estoque</li>
+            <li>Gera resumo de status para o coordenador no início do dia</li>
+            <li>Registra decisões tomadas com justificativa (evidência S&OE)</li>
+          </ul>
+        </div>
+        <div class="agent-col">
+          <h4>Escalona quando</h4>
+          <ul class="agent-esc">
+            <li>Risco de SLA para item crítico A sem solução automática</li>
+            <li>Múltiplas ordens do mesmo fornecedor em risco</li>
+            <li>Decisão de repriorização com impacto em projetos</li>
+          </ul>
+        </div>
+      </div>
+      <div class="agent-foot">
+        <div class="agent-before"><h5>Antes</h5><p>Analista descobre problemas quando o prazo já estourou. Não há visibilidade cross-sistema. Cada reunião de S&OE começa com "vamos ver o que está atrasado"</p></div>
+        <div class="agent-after"><h5>Depois</h5><p>Agente monitora 24/7 e alerta com contexto completo. Reunião S&OE foca em decisão, não em levantamento de status</p></div>
+      </div>
+    </div>
+
+    <!-- Agente 6 -->
+    <div class="agent-card">
+      <div class="agent-head">
+        <div class="agent-emoji">⚖️</div>
+        <div class="agent-head-text">
+          <h3>Agente 6 — Reconciliador de Recebimento</h3>
+          <div class="agent-sub">Agentforce + DigiBee → WMS · Divergências tratadas automaticamente</div>
+        </div>
+        <div class="agent-impact"><div class="agent-impact-num">−70%</div><div class="agent-impact-lab">tratativas manuais</div></div>
+      </div>
+      <div class="agent-body">
+        <div class="agent-col">
+          <h4>Gatilho</h4>
+          <p>WMS/AGV reporta recebimento com divergência — faltante, excedente ou avaria (evento I-06)</p>
+        </div>
+        <div class="agent-col">
+          <h4>Ações autônomas</h4>
+          <ul>
+            <li>Compara recebido vs. pedido vs. tolerância contratual</li>
+            <li>Classifica: tolerância OK / acionar fornecedor / gerar estorno</li>
+            <li>Para divergências dentro da tolerância: fecha automaticamente</li>
+            <li>Para divergências fora: notifica fornecedor via EC com evidência</li>
+            <li>Registra impacto no EAM se for ativo com divergência</li>
+            <li>Gera relatório de recorrência por fornecedor</li>
+          </ul>
+        </div>
+        <div class="agent-col">
+          <h4>Escalona quando</h4>
+          <ul class="agent-esc">
+            <li>Divergência acima do threshold de valor</li>
+            <li>Mesmo fornecedor com 3+ divergências no mês</li>
+            <li>Avaria em ativo crítico ou alto valor</li>
+          </ul>
+        </div>
+      </div>
+      <div class="agent-foot">
+        <div class="agent-before"><h5>Antes</h5><p>Toda divergência gera e-mail manual + tratativa em planilha + volta ao fornecedor. Sem rastreamento de recorrência ou métricas de qualidade</p></div>
+        <div class="agent-after"><h5>Depois</h5><p>Casos dentro da tolerância fechados automaticamente. Casos problemáticos tratados com contexto completo e histórico do fornecedor</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ANTES × DEPOIS ===== -->
+  <section class="section" id="antesdepois">
+    <div class="sec-header">
+      <div class="sec-icon ora">↔️</div>
+      <div>
+        <h2>Jornadas Antes × Depois</h2>
+        <p>Como processos críticos mudam com o Maestro + Agentforce em operação</p>
+      </div>
+    </div>
+
+    <div class="ba-card">
+      <div class="ba-title">Jornada 1 — Follow-up de produção com fornecedor (ciclo completo)</div>
+      <div class="ba-body">
+        <div class="ba-before">
+          <div class="ba-label">Situação atual</div>
+          <div class="ba-step"><div class="ba-dot">1</div><p>Analista verifica planilha de controle para ver quais pedidos estão no prazo D-10</p></div>
+          <div class="ba-step"><div class="ba-dot">2</div><p>Redige e-mail manual para cada fornecedor perguntando status de produção</p></div>
+          <div class="ba-step"><div class="ba-dot">3</div><p>Aguarda resposta (1–3 dias). Sem resposta = novo e-mail + ligação</p></div>
+          <div class="ba-step"><div class="ba-dot">4</div><p>Lê resposta, interpreta, atualiza planilha manualmente</p></div>
+          <div class="ba-step"><div class="ba-dot">5</div><p>Se atraso: aciona coordenador via e-mail com contexto disperso</p></div>
+          <div class="ba-metric">⏱ 3–5 dias por ciclo · ~835 e-mails/mês · ~35% do tempo do analista</div>
+        </div>
+        <div class="ba-after">
+          <div class="ba-label">Com Maestro + Agente 2</div>
+          <div class="ba-step"><div class="ba-dot">1</div><p>SF monitora prazos automaticamente. Agente detecta D-10 sem atualização no portal do fornecedor</p></div>
+          <div class="ba-step"><div class="ba-dot">2</div><p>Agente envia notificação via Experience Cloud solicitando atualização de status</p></div>
+          <div class="ba-step"><div class="ba-dot">3</div><p>Fornecedor atualiza no portal → Agente lê, interpreta e atualiza registro no SF automaticamente</p></div>
+          <div class="ba-step"><div class="ba-dot">4</div><p>Se risco: Agente notifica analista com contexto completo (histórico, criticidade, impacto)</p></div>
+          <div class="ba-step"><div class="ba-dot">5</div><p>Analista decide apenas nos casos com risco real — com informação completa na tela</p></div>
+          <div class="ba-metric">⚡ Horas por ciclo · Analista trata só exceções (~20% dos casos)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ba-card">
+      <div class="ba-title">Jornada 2 — Agendamento de coleta na AGV (da ordem ao slot confirmado)</div>
+      <div class="ba-body">
+        <div class="ba-before">
+          <div class="ba-label">Situação atual</div>
+          <div class="ba-step"><div class="ba-dot">1</div><p>Fornecedor entra em contato solicitando slot de entrega na AGV</p></div>
+          <div class="ba-step"><div class="ba-dot">2</div><p>Analista Itaú consulta planilha de agenda da AGV (mantida pela AGV)</p></div>
+          <div class="ba-step"><div class="ba-dot">3</div><p>Analista propõe slot via e-mail para o fornecedor</p></div>
+          <div class="ba-step"><div class="ba-dot">4</div><p>Fornecedor responde (às vezes rejeita) → novo ciclo com AGV</p></div>
+          <div class="ba-step"><div class="ba-dot">5</div><p>Analista confirma para AGV, fornecedor e transportadora separadamente</p></div>
+          <div class="ba-metric">⏱ 2–3 dias · 4–6 e-mails por agendamento · Itaú como intermediário desnecessário</div>
+        </div>
+        <div class="ba-after">
+          <div class="ba-label">Com Maestro + Agente 3</div>
+          <div class="ba-step"><div class="ba-dot">1</div><p>Reserva aprovada dispara Agente 3 automaticamente</p></div>
+          <div class="ba-step"><div class="ba-dot">2</div><p>Agente consulta disponibilidade AGV via DigiBee (API TMS) em tempo real</p></div>
+          <div class="ba-step"><div class="ba-dot">3</div><p>Propõe 3 slots para o fornecedor via Experience Cloud</p></div>
+          <div class="ba-step"><div class="ba-dot">4</div><p>Fornecedor escolhe no portal → Agente confirma em TMS, AGV e transportadora simultaneamente</p></div>
+          <div class="ba-step"><div class="ba-dot">5</div><p>SF atualiza estado da reserva e registra todos os participantes no evento</p></div>
+          <div class="ba-metric">⚡ Horas · Zero e-mails · Analista só entra em conflito de capacidade</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ba-card">
+      <div class="ba-title">Jornada 3 — Abertura e triagem de uma nova reversa</div>
+      <div class="ba-body">
+        <div class="ba-before">
+          <div class="ba-label">Situação atual</div>
+          <div class="ba-step"><div class="ba-dot">1</div><p>Solicitante envia e-mail ou abre chamado sem formato definido</p></div>
+          <div class="ba-step"><div class="ba-dot">2</div><p>Analista lê e tenta classificar o tipo de reversa (frequentemente errado)</p></div>
+          <div class="ba-step"><div class="ba-dot">3</div><p>Tipo errado → workflow errado → retrabalho e atraso</p></div>
+          <div class="ba-step"><div class="ba-dot">4</div><p>Portais de reversa e descarte são desconectados — cada um tem seu processo</p></div>
+          <div class="ba-step"><div class="ba-dot">5</div><p>Evidências solicitadas depois, uma por vez, por e-mail</p></div>
+          <div class="ba-metric">⏱ 1–2 dias até processo correto iniciado · Alto índice de retrabalho por tipo errado</div>
+        </div>
+        <div class="ba-after">
+          <div class="ba-label">Com Maestro + Agente 4</div>
+          <div class="ba-step"><div class="ba-dot">1</div><p>Solicitante abre reversa no SF (portal ou workspace do analista)</p></div>
+          <div class="ba-step"><div class="ba-dot">2</div><p>Agente 4 faz 3–4 perguntas guiadas para classificar o tipo exato</p></div>
+          <div class="ba-step"><div class="ba-dot">3</div><p>Tipo identificado → Agente aciona o Flow Orchestration correto para aquele tipo</p></div>
+          <div class="ba-step"><div class="ba-dot">4</div><p>Flow solicita exatamente as evidências necessárias para aquele tipo (nada a mais, nada a menos)</p></div>
+          <div class="ba-step"><div class="ba-dot">5</div><p>Ordem de coleta criada no TMS e EAM atualizado se aplicável — tudo automático</p></div>
+          <div class="ba-metric">⚡ Minutos até processo correto iniciado · Evidências coletadas no ato · Zero retrabalho de tipo</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOUNDATION ===== -->
+  <section class="section" id="foundation">
+    <div class="sec-header">
+      <div class="sec-icon">🏗️</div>
+      <div>
+        <h2>Foundation para Agentforce — Pré-requisitos</h2>
+        <p>O que precisa estar em funcionamento para os agentes operarem com segurança e precisão</p>
+      </div>
+    </div>
+
+    <div class="grid g3 mb24">
+      <div class="check-group">
+        <div class="check-group-title">🗄️ Dados e qualidade</div>
+        <div class="check-item"><div class="check-icon must">●</div><p><strong>Cadastro de fornecedores:</strong> nome, CNPJ, contato e responsável no SF (sem isso o Agente 2 não sabe a quem notificar)</p></div>
+        <div class="check-item"><div class="check-icon must">●</div><p><strong>Catálogo de materiais:</strong> SKU, criticidade ABC, tempo de produção padrão</p></div>
+        <div class="check-item"><div class="check-icon dep">◑</div><p><strong>API do WMS com disponibilidade em tempo real:</strong> necessária para o Agente 1 e 3</p></div>
+        <div class="check-item"><div class="check-icon dep">◑</div><p><strong>Tolerâncias contratuais por fornecedor:</strong> necessárias para o Agente 6 (reconciliação)</p></div>
+        <div class="check-item"><div class="check-icon nice">○</div><p><strong>Histórico de 12 meses de SLA por fornecedor:</strong> melhora a precisão dos agentes de priorização</p></div>
+      </div>
+      <div class="check-group">
+        <div class="check-group-title">🔌 Integrações (via DigiBee)</div>
+        <div class="check-item"><div class="check-icon must">●</div><p><strong>I-01:</strong> Portal de Reservas → SF (Agente 1 depende desta entrada)</p></div>
+        <div class="check-item"><div class="check-icon must">●</div><p><strong>I-04:</strong> SF → TMS (Agente 3 cria ordem de transporte)</p></div>
+        <div class="check-item"><div class="check-icon must">●</div><p><strong>I-06:</strong> WMS → SF (Agente 6 reage a divergências de recebimento)</p></div>
+        <div class="check-item"><div class="check-icon dep">◑</div><p><strong>I-03:</strong> WMS → SF disponibilidade (Agente 1 e 3 consultam estoque)</p></div>
+        <div class="check-item"><div class="check-icon dep">◑</div><p><strong>I-07:</strong> SF → EAM (Agente 4 atualiza ativo após reversa)</p></div>
+      </div>
+      <div class="check-group">
+        <div class="check-group-title">🔒 Governança e acesso</div>
+        <div class="check-item"><div class="check-icon must">●</div><p><strong>Rainbow / Parcerias:</strong> habilitação de fornecedores e transportadoras para o Experience Cloud</p></div>
+        <div class="check-item"><div class="check-icon must">●</div><p><strong>Limites de autorização dos agentes:</strong> quais ações cada agente pode tomar sem aprovação humana (threshold por valor e tipo)</p></div>
+        <div class="check-item"><div class="check-icon must">●</div><p><strong>Aprovação Foundation:</strong> Cyber, Arq, Operação validam escopo de cada agente antes de produção</p></div>
+        <div class="check-item"><div class="check-icon dep">◑</div><p><strong>Treinamento de prompts dos agentes:</strong> cada agente precisa de casos de teste e refinamento em sandbox antes de produção</p></div>
+        <div class="check-item"><div class="check-icon nice">○</div><p><strong>Feedback loop:</strong> analistas marcam decisões dos agentes como corretas/incorretas para melhoria contínua</p></div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;font-size:12px;flex-wrap:wrap;margin-bottom:16px;">
+      <span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#DBEAFE;vertical-align:middle;margin-right:4px;"></span>● Obrigatório — sem isso o agente não funciona</span>
+      <span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#FEF3C7;vertical-align:middle;margin-right:4px;"></span>◑ Dependência — reduz escopo sem isso</span>
+      <span><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#D1FAE5;vertical-align:middle;margin-right:4px;"></span>○ Desejável — melhora qualidade</span>
+    </div>
+
+    <div class="warn-note">
+      <strong>Nenhum agente vai a produção sem:</strong> (1) sandbox testado com casos reais, (2) threshold de autorização aprovado, (3) escalação para humano validada, (4) métricas de qualidade monitoradas por pelo menos 2 semanas em shadow mode.
+    </div>
+  </section>
+
+  <!-- ===== FASEAMENTO ===== -->
+  <section class="section" id="faseamento">
+    <div class="sec-header">
+      <div class="sec-icon ai">📅</div>
+      <div>
+        <h2>Faseamento dos Agentes por Horizonte</h2>
+        <p>Sequenciamento baseado em dependências de integração e maturidade de dados</p>
+      </div>
+    </div>
+
+    <div class="phase-grid mb24">
+      <div class="phase-col">
+        <div class="phase-head h1">
+          <div class="phase-head-sub">Horizonte 1 · 0–6 meses</div>
+          <div class="phase-head-title">Foundation</div>
+        </div>
+        <div class="phase-body">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Agentes a implantar</div>
+          <div class="phase-agent ready">
+            <div class="pa-num h1c">1</div>
+            <div class="pa-text"><div class="pa-name">Triador de Demanda</div><div class="pa-dep">Depende: I-01 + WMS API básica</div></div>
+          </div>
+          <div class="phase-agent ready">
+            <div class="pa-num h1c">4</div>
+            <div class="pa-text"><div class="pa-name">Classificador de Reversa</div><div class="pa-dep">Depende: Flow Orchestration dos 4 tipos</div></div>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6;">
+            <p style="margin-bottom:6px;">✓ Catalogar fornecedores e materiais no SF</p>
+            <p style="margin-bottom:6px;">✓ Implantar I-01 (Portal → SF)</p>
+            <p>✓ Shadow mode por 2 semanas antes de produção</p>
+          </div>
+        </div>
+      </div>
+      <div class="phase-col">
+        <div class="phase-head h2">
+          <div class="phase-head-sub">Horizonte 2 · 6–18 meses</div>
+          <div class="phase-head-title">Integração</div>
+        </div>
+        <div class="phase-body">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Agentes a implantar</div>
+          <div class="phase-agent dep">
+            <div class="pa-num h2c">2</div>
+            <div class="pa-text"><div class="pa-name">Follow-up com Fornecedor</div><div class="pa-dep">Depende: EC ativo + Rainbow habilitado</div></div>
+          </div>
+          <div class="phase-agent dep">
+            <div class="pa-num h2c">3</div>
+            <div class="pa-text"><div class="pa-name">Agendamento AGV</div><div class="pa-dep">Depende: I-04 (TMS) + I-03 (WMS)</div></div>
+          </div>
+          <div class="phase-agent dep">
+            <div class="pa-num h2c">5</div>
+            <div class="pa-text"><div class="pa-name">Assistente Mesa S&amp;OE</div><div class="pa-dep">Depende: Control Tower + dados históricos</div></div>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6;">
+            <p style="margin-bottom:6px;">✓ EC com fornecedores em produção</p>
+            <p style="margin-bottom:6px;">✓ Integrações I-03 e I-04 estáveis</p>
+            <p>✓ 6 meses de histórico para treinar alertas</p>
+          </div>
+        </div>
+      </div>
+      <div class="phase-col">
+        <div class="phase-head h3">
+          <div class="phase-head-sub">Horizonte 3 · 18+ meses</div>
+          <div class="phase-head-title">Inteligência</div>
+        </div>
+        <div class="phase-body">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:8px;">Agentes a implantar</div>
+          <div class="phase-agent future">
+            <div class="pa-num h3c">6</div>
+            <div class="pa-text"><div class="pa-name">Reconciliador de Recebimento</div><div class="pa-dep">Depende: I-06 estável + tolerâncias contratuais</div></div>
+          </div>
+          <div style="margin-top:12px;background:#F5F3FF;border-radius:8px;padding:12px;border:1px solid #DDD6FE;">
+            <div style="font-size:12px;font-weight:700;color:#6D28D9;margin-bottom:6px;">Agentes futuros (H3)</div>
+            <div style="font-size:11px;color:#4C1D95;line-height:1.6;">
+              <p style="margin-bottom:4px;">🔮 Agente de previsão de demanda</p>
+              <p style="margin-bottom:4px;">🔮 Agente de otimização de rota</p>
+              <p>🔮 Agente de abastecimento autônomo de agências</p>
+            </div>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6;">
+            <p style="margin-bottom:6px;">✓ Data Mesh com 5 domínios operacionais</p>
+            <p>✓ 12+ meses de dados de qualidade para IA preditiva</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid g5">
+      <div class="card" style="text-align:center;border-top:3px solid var(--orange);">
+        <div style="font-size:22px;font-weight:800;color:var(--orange);">−80%</div>
+        <div style="font-size:12px;font-weight:600;margin-top:4px;">Trabalho manual</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">H2 completo</div>
+      </div>
+      <div class="card" style="text-align:center;border-top:3px solid var(--blue);">
+        <div style="font-size:22px;font-weight:800;color:var(--blue);">−835</div>
+        <div style="font-size:12px;font-weight:600;margin-top:4px;">e-mails/mês</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Agente 2 ativo</div>
+      </div>
+      <div class="card" style="text-align:center;border-top:3px solid var(--blue);">
+        <div style="font-size:22px;font-weight:800;color:var(--blue);">0</div>
+        <div style="font-size:12px;font-weight:600;margin-top:4px;">ping-pong AGV</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Agente 3 ativo</div>
+      </div>
+      <div class="card" style="text-align:center;border-top:3px solid #7C3AED;">
+        <div style="font-size:22px;font-weight:800;color:#7C3AED;">100%</div>
+        <div style="font-size:12px;font-weight:600;margin-top:4px;">Reversa correta</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Agente 4 ativo</div>
+      </div>
+      <div class="card" style="text-align:center;border-top:3px solid var(--orange);">
+        <div style="font-size:22px;font-weight:800;color:var(--orange);">24/7</div>
+        <div style="font-size:12px;font-weight:600;margin-top:4px;">Monitoramento</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Mesa S&OE</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  Salesforce como Maestro — Orquestração &amp; Agentforce · Itaú Logística · v2.0 · Setembro 2026 · Hipótese de trabalho
+</footer>
+
+<script>
+  (function () {
+    const K = 'itau_bp_auth';
+    const overlay = document.getElementById('login-overlay');
+    if (sessionStorage.getItem(K) === '1') { overlay.classList.add('hidden'); }
+    document.getElementById('login-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const u = document.getElementById('lu').value.trim();
+      const p = document.getElementById('lp').value.trim();
+      if (u === 'Salesforce' && p === '2368') {
+        sessionStorage.setItem(K, '1');
+        overlay.classList.add('hidden');
+        document.getElementById('lerr').classList.remove('show');
+      } else {
+        document.getElementById('lerr').classList.add('show');
+        document.getElementById('lp').value = '';
+        document.getElementById('lp').focus();
+      }
+    });
+  })();
+
+  const sections = document.querySelectorAll('.section');
+  const navLinks = document.querySelectorAll('.nav a:not(.nav-back a)');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(a => a.classList.remove('active'));
+        const a = document.querySelector(`.nav a[href="#${e.target.id}"]`);
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+  sections.forEach(s => obs.observe(s));
+  navLinks.forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const t = document.querySelector(a.getAttribute('href'));
+      if (t) t.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+</script>
+</body>
+</html>
