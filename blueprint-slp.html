@@ -43,7 +43,8 @@
     }
     .sel-box h2 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
     .sel-box > p { font-size: 14px; opacity: .75; margin-bottom: 32px; }
-    .sel-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .sel-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+    @media(max-width:900px){.sel-cards{grid-template-columns:1fr;}}
     .sel-card {
       background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2);
       border-radius: 16px; padding: 28px 24px; text-align: left; cursor: pointer;
@@ -343,7 +344,7 @@
         <button class="sel-btn">Abrir v1.0 →</button>
       </div>
       <div class="sel-card new" onclick="selectV2()">
-        <div class="sel-version">✨ v2.0 — Novo</div>
+        <div class="sel-version">v2.0</div>
         <h3>SF como Maestro &amp; Agentforce</h3>
         <p>Salesforce como orquestrador de workflows, 6 agentes de IA e comparativo antes × depois dos processos</p>
         <div class="sel-tags">
@@ -353,6 +354,18 @@
           <span class="sel-tag">−80% manual</span>
         </div>
         <button class="sel-btn">Abrir v2.0 →</button>
+      </div>
+      <div class="sel-card new" onclick="selectV3()">
+        <div class="sel-version">✨ v3.0 — Mais recente</div>
+        <h3>SF onde Mais Importa</h3>
+        <p>Validado na reunião de 15/09 — o SF como camada de exceções e aprovações, com ROI focado e faseamento realista</p>
+        <div class="sel-tags">
+          <span class="sel-tag">Reunião 15/09</span>
+          <span class="sel-tag">5 Momentos críticos</span>
+          <span class="sel-tag">S&amp;NOI Workflow</span>
+          <span class="sel-tag">ROI Concentrado</span>
+        </div>
+        <button class="sel-btn">Abrir v3.0 →</button>
       </div>
     </div>
     <div class="sel-footer">Acesso restrito · Itaú Suprimentos · Setembro 2026</div>
@@ -1438,6 +1451,10 @@
   function selectV2() {
     sessionStorage.removeItem(V_KEY);
     window.location.href = 'blueprint-maestro.html';
+  }
+  function selectV3() {
+    sessionStorage.removeItem(V_KEY);
+    window.location.href = 'blueprint-v3.html';
   }
 
   (function () {

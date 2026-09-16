@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Salesforce onde Mais Importa — Camada de Exceções · Itaú v3.0</title>
+  <style>
+    /* LOGIN */
+    #login-overlay{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#003DA5 0%,#001f6b 100%);display:flex;align-items:center;justify-content:center;}
+    #login-overlay.hidden{display:none;}
+    .login-box{background:#fff;border-radius:16px;padding:48px 40px;width:100%;max-width:380px;box-shadow:0 24px 64px rgba(0,0,0,0.3);text-align:center;}
+    .login-logo{width:56px;height:56px;background:#003DA5;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;}
+    .login-box h1{font-size:20px;font-weight:700;color:#1A1A2E;margin-bottom:4px;}
+    .login-box p{font-size:13px;color:#6B6B6B;margin-bottom:28px;}
+    .login-field{margin-bottom:16px;text-align:left;}
+    .login-field label{display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;}
+    .login-field input{width:100%;padding:10px 14px;border:1.5px solid #D1D5DB;border-radius:8px;font-size:14px;outline:none;transition:border-color .2s;font-family:inherit;}
+    .login-field input:focus{border-color:#003DA5;}
+    .login-btn{width:100%;padding:12px;background:#003DA5;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;transition:background .2s;font-family:inherit;}
+    .login-btn:hover{background:#002d7a;}
+    .login-error{margin-top:14px;padding:10px 14px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:8px;color:#B91C1C;font-size:13px;display:none;}
+    .login-error.show{display:block;}
+    .login-footer{margin-top:20px;font-size:11px;color:#9CA3AF;}
+
+    /* VARS */
+    :root{
+      --blue:#003DA5;--orange:#EC7000;--dark:#1A1A2E;
+      --bg:#F4F6FA;--card:#FFFFFF;--text:#1C1C1E;--muted:#6B6B6B;
+      --border:#E2E8F0;--teal:#0D9488;--warn:#F59E0B;--red:#EF4444;
+      --radius:12px;--shadow:0 2px 12px rgba(0,0,0,0.08);
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);}
+    .hidden{display:none!important;}
+
+    /* HEADER */
+    .header{background:linear-gradient(135deg,#001f6b 0%,#003DA5 60%,#1a4fa8 100%);color:white;padding:32px 48px 28px;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;}
+    .header-left h1{font-size:24px;font-weight:800;letter-spacing:-.3px;}
+    .header-left p{font-size:14px;opacity:.75;margin-top:4px;}
+    .header-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+    .badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:500;}
+    .badge.ora{background:rgba(236,112,0,.35);border-color:var(--orange);}
+    .badge.teal{background:rgba(13,148,136,.35);border-color:#0D9488;}
+    .header-kpis{display:flex;gap:20px;}
+    .kpi{text-align:center;}
+    .kpi-num{font-size:28px;font-weight:800;color:var(--orange);line-height:1;}
+    .kpi-lab{font-size:11px;opacity:.7;margin-top:3px;text-transform:uppercase;letter-spacing:.5px;}
+
+    /* NAV */
+    .nav{background:var(--card);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;padding:0 48px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+    .nav a{text-decoration:none;color:var(--muted);padding:14px 14px;font-size:13px;font-weight:500;border-bottom:2px solid transparent;white-space:nowrap;transition:color .2s,border-color .2s;}
+    .nav a:hover{color:var(--blue);}
+    .nav a.active{color:var(--blue);border-color:var(--orange);font-weight:600;}
+    .nav-back{margin-left:auto;display:flex;align-items:center;}
+    .nav-back a{color:var(--blue);font-weight:600;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:6px 12px;text-decoration:none;}
+    .nav-back a:hover{background:#EFF6FF;}
+
+    /* LAYOUT */
+    .main{max-width:1200px;margin:0 auto;padding:40px 48px 80px;}
+    .section{margin-bottom:64px;scroll-margin-top:56px;}
+    .sec-header{display:flex;align-items:center;gap:12px;margin-bottom:24px;}
+    .sec-icon{width:36px;height:36px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:16px;flex-shrink:0;}
+    .sec-icon.ora{background:var(--orange);}
+    .sec-icon.teal{background:var(--teal);}
+    .sec-icon.red{background:var(--red);}
+    .sec-header h2{font-size:20px;font-weight:700;color:var(--dark);}
+    .sec-header p{font-size:13px;color:var(--muted);margin-top:2px;}
+
+    .grid{display:grid;gap:16px;}
+    .g2{grid-template-columns:repeat(2,1fr);}
+    .g3{grid-template-columns:repeat(3,1fr);}
+    @media(max-width:900px){.g2,.g3{grid-template-columns:1fr;}}
+
+    .card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);border:1px solid var(--border);}
+    .card-title{font-size:14px;font-weight:700;color:var(--dark);margin-bottom:8px;}
+    .card-body{font-size:13px;color:var(--muted);line-height:1.6;}
+    .mb16{margin-bottom:16px;}.mb24{margin-bottom:24px;}
+
+    .note{background:#EFF6FF;border-left:4px solid var(--blue);padding:14px 16px;border-radius:0 8px 8px 0;font-size:13px;color:#1e3a6e;line-height:1.6;}
+    .warn-note{background:#FFFBEB;border-left:4px solid var(--warn);padding:14px 16px;border-radius:0 8px 8px 0;font-size:13px;color:#78350f;line-height:1.6;}
+    .teal-note{background:#F0FDFA;border-left:4px solid var(--teal);padding:14px 16px;border-radius:0 8px 8px 0;font-size:13px;color:#134e4a;line-height:1.6;}
+
+    /* TABLE */
+    .table-wrap{overflow-x:auto;border-radius:var(--radius);box-shadow:var(--shadow);}
+    table{width:100%;border-collapse:collapse;background:var(--card);font-size:13px;}
+    th{background:var(--dark);color:white;padding:12px 14px;text-align:left;font-size:12px;font-weight:600;letter-spacing:.3px;}
+    td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:top;}
+    tr:last-child td{border-bottom:none;}
+    tr:hover td{background:#F8FAFC;}
+
+    /* ARCHITECTURE */
+    .arch{background:var(--card);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);border:1px solid var(--border);}
+    .arch-layer{margin-bottom:12px;}
+    .arch-layer-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;}
+    .arch-layer-items{display:flex;gap:8px;flex-wrap:wrap;}
+    .arch-item{padding:8px 14px;border-radius:6px;font-size:12px;font-weight:500;}
+    .arch-item.aws{background:#232F3E;color:white;}
+    .arch-item.sf{background:var(--blue);color:white;}
+    .arch-item.sf-exc{background:var(--teal);color:white;}
+    .arch-item.dig{background:var(--orange);color:white;}
+    .arch-item.sap{background:#003073;color:white;}
+    .arch-item.data{background:#4C1D95;color:white;}
+    .arch-item.gray{background:#F3F4F6;color:#374151;border:1px solid #E5E7EB;}
+    .arch-item.wf{background:var(--teal);color:white;border:2px dashed #0f766e;font-weight:700;}
+    .arch-arrow-row{display:flex;align-items:center;justify-content:center;height:24px;margin:2px 0;}
+    .arch-arrow-text{font-size:11px;color:var(--muted);font-weight:500;}
+
+    /* EXCEPTION CARDS */
+    .exc-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden;margin-bottom:16px;}
+    .exc-head{display:flex;align-items:center;gap:16px;padding:16px 20px;background:linear-gradient(135deg,#001f6b,#003DA5);}
+    .exc-num{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:white;flex-shrink:0;}
+    .exc-head-text{flex:1;}
+    .exc-head-text h3{font-size:15px;font-weight:700;color:white;}
+    .exc-head-text p{font-size:12px;color:rgba(255,255,255,.7);margin-top:2px;}
+    .exc-trigger{background:rgba(236,112,0,.3);border:1px solid rgba(236,112,0,.5);border-radius:6px;padding:4px 12px;font-size:11px;font-weight:600;color:#FED7AA;flex-shrink:0;white-space:nowrap;}
+    .exc-body{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:0;}
+    @media(max-width:900px){.exc-body{grid-template-columns:1fr;}}
+    .exc-col{padding:16px 18px;border-right:1px solid var(--border);}
+    .exc-col:last-child{border-right:none;}
+    .exc-col h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px;}
+    .exc-col p,.exc-col li{font-size:12px;color:var(--text);line-height:1.6;}
+    .exc-col ul{padding-left:14px;}
+    .exc-col li{margin-bottom:4px;}
+    .exc-foot{background:linear-gradient(90deg,#F0FDFA,#EFF6FF);border-top:1px solid var(--border);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;}
+    .exc-impact{font-size:13px;font-weight:700;color:var(--teal);}
+    .exc-foot-tag{font-size:11px;color:var(--muted);}
+
+    /* WEEKLY RHYTHM */
+    .rhythm{display:flex;gap:0;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;border:1px solid var(--border);}
+    .rhythm-day{flex:1;padding:14px 10px;text-align:center;border-right:1px solid var(--border);}
+    .rhythm-day:last-child{border-right:none;}
+    .rhythm-day.sf-day{background:#EFF6FF;}
+    .rhythm-dow{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px;}
+    .rhythm-sys{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;margin-bottom:8px;}
+    .rhythm-sys.auto{background:#F0FDF4;color:#166534;}
+    .rhythm-sys.sf-sys{background:#DBEAFE;color:var(--blue);}
+    .rhythm-title{font-size:12px;font-weight:600;color:var(--dark);margin-bottom:4px;}
+    .rhythm-desc{font-size:11px;color:var(--muted);line-height:1.4;}
+
+    /* BEFORE/AFTER */
+    .ba-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden;margin-bottom:16px;}
+    .ba-title{padding:14px 20px;background:var(--dark);color:white;font-size:14px;font-weight:700;}
+    .ba-body{display:grid;grid-template-columns:1fr 1fr;}
+    @media(max-width:700px){.ba-body{grid-template-columns:1fr;}}
+    .ba-before{padding:20px;background:#FFF5F5;}
+    .ba-after{padding:20px;background:#F0F9FF;border-left:1px solid var(--border);}
+    .ba-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;}
+    .ba-before .ba-label{color:#B91C1C;}
+    .ba-after .ba-label{color:var(--blue);}
+    .ba-step{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;}
+    .ba-dot{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px;}
+    .ba-before .ba-dot{background:#FCA5A5;color:#7F1D1D;}
+    .ba-after .ba-dot{background:#BFDBFE;color:var(--blue);}
+    .ba-step p{font-size:12px;line-height:1.5;color:var(--text);}
+    .ba-metric{margin-top:14px;padding:10px 14px;border-radius:8px;font-size:12px;font-weight:600;}
+    .ba-before .ba-metric{background:#FEE2E2;color:#991B1B;}
+    .ba-after .ba-metric{background:#DBEAFE;color:#1E40AF;}
+
+    /* ROI TOTAL */
+    .roi-total{background:linear-gradient(135deg,#003DA5,#001f6b);border-radius:var(--radius);padding:24px;color:white;display:flex;justify-content:space-around;align-items:center;margin-top:16px;flex-wrap:wrap;gap:16px;}
+    .roi-item{text-align:center;}
+    .roi-num{font-size:32px;font-weight:800;color:var(--orange);}
+    .roi-lab{font-size:11px;opacity:.75;text-transform:uppercase;letter-spacing:.5px;margin-top:4px;}
+
+    /* PHASING */
+    .phase-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+    @media(max-width:900px){.phase-grid{grid-template-columns:1fr;}}
+    .phase-col{border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);}
+    .phase-head{padding:16px 18px;color:white;}
+    .phase-head.h1{background:var(--orange);}
+    .phase-head.h2{background:var(--blue);}
+    .phase-head.h3{background:var(--teal);}
+    .phase-head-sub{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.8;}
+    .phase-head-title{font-size:18px;font-weight:800;margin-top:4px;}
+    .phase-body{background:white;padding:16px 18px;border:1px solid var(--border);border-top:none;}
+    .phase-item{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;padding:8px 10px;border-radius:6px;}
+    .phase-item.h1c{background:#FFF7ED;border:1px solid #FED7AA;}
+    .phase-item.h2c{background:#EFF6FF;border:1px solid #BFDBFE;}
+    .phase-item.h3c{background:#F0FDFA;border:1px solid #99F6E4;}
+    .pi-icon{font-size:18px;flex-shrink:0;}
+    .pi-name{font-size:12px;font-weight:600;color:var(--dark);}
+    .pi-dep{font-size:11px;color:var(--muted);margin-top:2px;}
+
+    footer.footer{background:var(--dark);color:rgba(255,255,255,.5);text-align:center;padding:20px;font-size:12px;}
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-overlay">
+  <div class="login-box">
+    <div class="login-logo">🏦</div>
+    <h1>Itaú Suprimentos</h1>
+    <p>Blueprint de Arquitetura — v3.0</p>
+    <form id="login-form" autocomplete="off">
+      <div class="login-field"><label>Usuário</label><input id="lu" type="text" autofocus /></div>
+      <div class="login-field"><label>Senha</label><input id="lp" type="password" /></div>
+      <button class="login-btn" type="submit">Entrar</button>
+      <div class="login-error" id="lerr">Usuário ou senha incorretos.</div>
+    </form>
+    <div class="login-footer">Acesso restrito · Itaú Suprimentos</div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header class="header" id="page-content" style="display:none;">
+  <div class="header-left">
+    <h1>Salesforce onde Mais Importa — Camada de Exceções</h1>
+    <p>Menos SF no core, mais valor nos momentos decisivos da logística bancária</p>
+    <div class="header-badges">
+      <span class="badge">Setembro 2026</span>
+      <span class="badge">v3.0</span>
+      <span class="badge ora">Validado — Reunião 15/09</span>
+      <span class="badge teal">Exceções &amp; Aprovações</span>
+    </div>
+  </div>
+  <div class="header-kpis">
+    <div class="kpi"><div class="kpi-num">5</div><div class="kpi-lab">Momentos críticos</div></div>
+    <div class="kpi"><div class="kpi-num">52×</div><div class="kpi-lab">S&amp;NOI / ano</div></div>
+    <div class="kpi"><div class="kpi-num">−80%</div><div class="kpi-lab">Tempo de exceção</div></div>
+    <div class="kpi"><div class="kpi-num">H1</div><div class="kpi-lab">Entrega inicial</div></div>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav class="nav" id="page-nav" style="display:none;">
+  <a href="#diagnostico">Diagnóstico</a>
+  <a href="#arquitetura">Arquitetura</a>
+  <a href="#excecoes">Os 5 Momentos</a>
+  <a href="#comparativo">Antes × Depois</a>
+  <a href="#roi">ROI</a>
+  <a href="#faseamento">Faseamento</a>
+  <div class="nav-back">
+    <a href="blueprint-slp.html" onclick="sessionStorage.removeItem('itau_v_selected');return true;">⇄ Trocar versão</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main" id="page-main" style="display:none;">
+
+  <!-- 1. DIAGNÓSTICO -->
+  <section class="section" id="diagnostico">
+    <div class="sec-header">
+      <div class="sec-icon">🔍</div>
+      <div>
+        <h2>O Diagnóstico — O Que a Reunião Revelou</h2>
+        <p>Reunião de 15/09/2026 · Camila (PO), Thales (Eng.), Guilherme, Leo (NTT) e equipe</p>
+      </div>
+    </div>
+
+    <div class="teal-note mb24">
+      <strong>"Existem muitos fluxos de exceção, muitos."</strong> — Camila, Product Owner · Reunião 15/09/2026<br/>
+      O ideal da operação é totalmente automatizado. A realidade é que exceções existem em toda cadeia — e são nesses momentos que o Salesforce agrega valor máximo com footprint mínimo.
+    </div>
+
+    <div class="grid g2 mb24">
+      <div class="card">
+        <div class="card-title">O que o Itaú está construindo bem — fica no AWS</div>
+        <div class="card-body">
+          <p style="margin-bottom:10px;">A equipe do Thales constrói um sofisticado stack automatizado que <strong>não deve ser substituído</strong>:</p>
+          <ul style="padding-left:16px;line-height:1.9;">
+            <li><strong>Portal de Reservas (MFE Angular/AWS)</strong> — entrada de demanda das agências</li>
+            <li><strong>OMS — Orquestrador de Demanda</strong> — roteamento e lógica de negócio</li>
+            <li><strong>Motor de Priorização</strong> — regras parametrizadas, sem "feeling"</li>
+            <li><strong>TMS — Gestão de Pedidos e Entregas</strong> — execução logística com transportadoras</li>
+            <li><strong>WMS / AGV</strong> — controle de estoque físico no CD Cajamar</li>
+            <li><strong>Tracking</strong> — máquina de estado para visibilidade do rastreio (sem interação)</li>
+          </ul>
+          <div style="margin-top:14px;padding:10px;background:#F0FDF4;border-radius:8px;font-size:12px;color:#166534;font-weight:600;">
+            ✓ Tudo isso permanece no AWS. Salesforce não concorre com este stack.
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="border-color:var(--teal);border-width:2px;">
+        <div class="card-title" style="color:var(--teal);">Onde o Salesforce se encaixa — os momentos humanos</div>
+        <div class="card-body">
+          <p style="margin-bottom:10px;">SF atua nos pontos onde automação encontra decisão humana obrigatória:</p>
+          <ul style="padding-left:16px;line-height:1.9;">
+            <li><strong>Aprovação de prioridades em disputa (S&amp;NOI)</strong> — decisão semanal da Seta</li>
+            <li><strong>Demanda emergencial fora do ciclo</strong> — aprovação com critério e audit trail</li>
+            <li><strong>Avaria na entrega</strong> — ticket automático + workflow de tratativa com carrier</li>
+            <li><strong>Escassez de estoque não prevista</strong> — escalação estruturada com contexto objetivo</li>
+            <li><strong>Mudança de parâmetros do motor</strong> — workflow de aprovação para ajustes de regras</li>
+            <li><strong>Transportadora sem API (B2B)</strong> — portal Experience Cloud para self-service</li>
+          </ul>
+          <div style="margin-top:14px;padding:10px;background:#F0FDFA;border-radius:8px;font-size:12px;color:#0F766E;font-weight:600;">
+            ✓ A "caixinha WF" do diagrama Miro — respondida pelo Salesforce.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Distinção fundamental validada na reunião:</strong> Tracking é máquina de estado — dá visibilidade sem interação humana. Quando um evento dentro do fluxo exige ação (avaria, urgência, disputa de prioridade), ele deve <em>"cair para um workflow"</em> — esse é o Salesforce. O SF não substitui o tracking; ele recebe o que o tracking não consegue resolver automaticamente.
+    </div>
+  </section>
+
+  <!-- 2. ARQUITETURA -->
+  <section class="section" id="arquitetura">
+    <div class="sec-header">
+      <div class="sec-icon teal">🏗️</div>
+      <div>
+        <h2>Arquitetura Validada — O SF no Lugar Certo</h2>
+        <p>Interpretação do diagrama Miro apresentado na reunião de 15/09 · DigiBee como barramento obrigatório</p>
+      </div>
+    </div>
+
+    <div class="arch mb24">
+      <div class="arch-layer">
+        <div class="arch-layer-label">Planejamento &amp; Dados — Fora do escopo SF (engenharia de dados)</div>
+        <div class="arch-layer-items">
+          <span class="arch-item data">Previsão de Demanda</span>
+          <span class="arch-item data">Estratégia de Abastecimento</span>
+          <span class="arch-item data">Gestão Política de Estoque</span>
+          <span class="arch-item data">S&amp;OP / Planejamento PCP</span>
+          <span class="arch-item gray">Gestão de Compras (a definir — SAP?)</span>
+        </div>
+      </div>
+      <div class="arch-arrow-row"><span class="arch-arrow-text">↓ demanda planejada</span></div>
+      <div class="arch-layer">
+        <div class="arch-layer-label">Core Automatizado — AWS (Produto Thales · Portal de Reservas + OMS + TMS + WMS)</div>
+        <div class="arch-layer-items">
+          <span class="arch-item aws">Portal de Reservas (MFE Angular)</span>
+          <span class="arch-item aws">OMS — Orquestrador de Demanda</span>
+          <span class="arch-item aws">Motor de Priorização (regras)</span>
+          <span class="arch-item aws">Cotador / Consolidador</span>
+          <span class="arch-item aws">TMS — Ger. Pedidos &amp; Entregas</span>
+          <span class="arch-item aws">WMS / AGV (Cajamar)</span>
+          <span class="arch-item aws">Tracking (máquina de estado)</span>
+        </div>
+      </div>
+      <div class="arch-arrow-row"><span class="arch-arrow-text">↓ eventos de exceção &nbsp;|&nbsp; ↑ decisões aprovadas &nbsp;·&nbsp; via DigiBee</span></div>
+      <div class="arch-layer">
+        <div class="arch-layer-label">Barramento de Integração — DigiBee (API Gateway corporativo do Itaú)</div>
+        <div class="arch-layer-items">
+          <span class="arch-item dig">DigiBee — API Gateway + ESB</span>
+          <span class="arch-item gray">Platform Events SF → OMS / TMS</span>
+          <span class="arch-item gray">Webhooks TMS / WMS → SF</span>
+          <span class="arch-item gray">Conectores SAP ECC → SF</span>
+        </div>
+      </div>
+      <div class="arch-arrow-row"><span class="arch-arrow-text">↓ exceções &amp; aprovações necessárias</span></div>
+      <div class="arch-layer">
+        <div class="arch-layer-label">Camada de Exceções &amp; Decisões Humanas — Salesforce ← "WF (preciso de um workflow aqui??)" — diagrama Miro</div>
+        <div class="arch-layer-items">
+          <span class="arch-item wf">WF — Exceções &amp; Aprovações (SF)</span>
+          <span class="arch-item sf">Flow Orchestration (S&amp;NOI)</span>
+          <span class="arch-item sf">Case Management (avaria / escassez)</span>
+          <span class="arch-item sf">Omni-Channel Routing</span>
+          <span class="arch-item sf-exc">Experience Cloud (B2B sem API)</span>
+        </div>
+      </div>
+      <div class="arch-arrow-row"><span class="arch-arrow-text">↓ consultas de dados</span></div>
+      <div class="arch-layer">
+        <div class="arch-layer-label">Sistemas de Registro (leitura via DigiBee)</div>
+        <div class="arch-layer-items">
+          <span class="arch-item sap">SAP — Compras, Contratos, Fiscal</span>
+          <span class="arch-item gray">EAM / Octagon (Attune) — Ativos</span>
+          <span class="arch-item gray">Rainbow / Parcerias — Acesso Externos</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid g3">
+      <div class="card">
+        <div class="card-title">Regra de ouro: SF não toca no core</div>
+        <div class="card-body">O motor de priorização, o OMS e o TMS pertencem ao Itaú. SF nunca substitui esses sistemas. A integração é unidirecional para eventos de exceção — SF recebe, decide e devolve a decisão via DigiBee.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">DigiBee: barramento obrigatório</div>
+        <div class="card-body">Toda comunicação entre SF e os sistemas AWS passa pelo DigiBee. Nenhuma integração direta SF ↔ OMS/TMS/WMS. Isso garante governança, controle de versão e rastreabilidade das mensagens no padrão corporativo do Itaú.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Footprint mínimo, valor máximo</div>
+        <div class="card-body">A estratégia de H1 começa com apenas dois casos de uso (S&amp;NOI + Emergências). Isso minimiza o footprint SF, prova valor rapidamente e cria o contexto político para expansão em H2 e H3.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. OS 5 MOMENTOS -->
+  <section class="section" id="excecoes">
+    <div class="sec-header">
+      <div class="sec-icon ora">⚡</div>
+      <div>
+        <h2>Os 5 Momentos que Justificam o Salesforce</h2>
+        <p>Confirmados na reunião de 15/09 — onde automação encontra a necessidade de decisão humana</p>
+      </div>
+    </div>
+
+    <!-- Momento 1: S&NOI -->
+    <div class="exc-card">
+      <div class="exc-head">
+        <div class="exc-num">1</div>
+        <div class="exc-head-text">
+          <h3>Ciclo S&amp;NOI Semanal — Aprovação de Prioridades</h3>
+          <p>Supply &amp; Network Operations Intelligence — cerimônia recorrente toda semana, toda segunda a sexta</p>
+        </div>
+        <div class="exc-trigger">52× / ano · Toda semana</div>
+      </div>
+      <div style="padding:16px 20px 0;background:#F8FAFC;border-bottom:1px solid var(--border);">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">Ritmo semanal do ciclo</div>
+        <div class="rhythm" style="margin-bottom:16px;">
+          <div class="rhythm-day">
+            <div class="rhythm-dow">Segunda</div>
+            <span class="rhythm-sys auto">OMS Auto</span>
+            <div class="rhythm-title">Motor Prioriza</div>
+            <div class="rhythm-desc">OMS congela semana seguinte e roda motor de priorização automaticamente</div>
+          </div>
+          <div class="rhythm-day sf-day">
+            <div class="rhythm-dow">Terça</div>
+            <span class="rhythm-sys sf-sys">Salesforce</span>
+            <div class="rhythm-title">Preview para Seta</div>
+            <div class="rhythm-desc">SF distribui prévia da priorização para analistas da Seta avaliarem antes da reunião</div>
+          </div>
+          <div class="rhythm-day sf-day">
+            <div class="rhythm-dow">Quarta</div>
+            <span class="rhythm-sys sf-sys">Salesforce</span>
+            <div class="rhythm-title">Reunião S&amp;NOI</div>
+            <div class="rhythm-desc">Disputas tratadas via approval flow SF. Decisões registradas com audit trail completo</div>
+          </div>
+          <div class="rhythm-day sf-day">
+            <div class="rhythm-dow">Quarta/Qui</div>
+            <span class="rhythm-sys sf-sys">Salesforce</span>
+            <div class="rhythm-title">Aprovação Final</div>
+            <div class="rhythm-desc">Parâmetros ajustados se necessário. Aprovação desbloqueia Platform Event via DigiBee</div>
+          </div>
+          <div class="rhythm-day">
+            <div class="rhythm-dow">Sexta</div>
+            <span class="rhythm-sys auto">OMS Auto</span>
+            <div class="rhythm-title">Ordens Disparadas</div>
+            <div class="rhythm-desc">OMS recebe decisões aprovadas e dispara ordens de separação automaticamente</div>
+          </div>
+        </div>
+      </div>
+      <div class="exc-body">
+        <div class="exc-col">
+          <h4>Sem Salesforce</h4>
+          <ul>
+            <li>Preview da priorização enviado por email (Excel/PDF)</li>
+            <li>Disputas levantadas verbalmente na reunião — sem registro sistêmico</li>
+            <li>Decisões capturadas em ata de reunião</li>
+            <li>Ajuste manual no OMS baseado na ata — propenso a erros</li>
+            <li>Sem rastreabilidade de quem aprovou o quê</li>
+          </ul>
+        </div>
+        <div class="exc-col">
+          <h4>Com Salesforce — Flow Orchestration</h4>
+          <ul>
+            <li>OMS envia snapshot de priorização para SF via DigiBee toda segunda</li>
+            <li>Omni-Channel distribui pautas de disputa para analistas Seta na terça</li>
+            <li>Disputas resolvidas via approval flow com contexto do OMS (criticidade, prazo, obra)</li>
+            <li>Decisões aprovadas geram Platform Event → OMS via DigiBee na sexta</li>
+            <li>Histórico completo de cada ciclo S&amp;NOI acessível para auditoria</li>
+          </ul>
+        </div>
+        <div class="exc-col">
+          <h4>O que SF entrega</h4>
+          <ul>
+            <li>Audit trail completo de priorização</li>
+            <li>Integração sistêmica com OMS (zero ajuste manual)</li>
+            <li>SLA de aprovação rastreado</li>
+            <li>Contexto objetivo para decisão (sem feeling)</li>
+            <li>Base histórica para análise de escassez recorrente</li>
+          </ul>
+        </div>
+      </div>
+      <div class="exc-foot">
+        <span class="exc-impact">−3h / ciclo de setup e follow-up manual</span>
+        <span class="exc-foot-tag">= −156h / ano · zero ajuste manual no OMS</span>
+      </div>
+    </div>
+
+    <!-- Momento 2: Emergência -->
+    <div class="exc-card">
+      <div class="exc-head">
+        <div class="exc-num">2</div>
+        <div class="exc-head-text">
+          <h3>Aprovação de Demanda Emergencial</h3>
+          <p>Fiscal ou Seta solicita material urgente fora do ciclo de priorização normal — obra em risco</p>
+        </div>
+        <div class="exc-trigger">Recorrente · Fora do ciclo</div>
+      </div>
+      <div class="exc-body">
+        <div class="exc-col">
+          <h4>Sem Salesforce</h4>
+          <ul>
+            <li>Email para coordenador explicando urgência</li>
+            <li>Coordenador avalia por "feeling" — sem critério objetivo</li>
+            <li>Aprovação informal por email ou WhatsApp</li>
+            <li>Ajuste manual de parâmetros no motor de priorização</li>
+            <li>SLA médio: 3–5 dias úteis</li>
+            <li>Sem audit trail para auditoria interna</li>
+          </ul>
+        </div>
+        <div class="exc-col">
+          <h4>Com Salesforce — Case + Approval Flow</h4>
+          <ul>
+            <li>Fiscal abre case via portal ou integração com Portal de Reservas</li>
+            <li>SF valida critério automaticamente: criticidade A/B/C, obra em risco, prazo</li>
+            <li>Approval flow para coordenador Seta com contexto do OMS embutido</li>
+            <li>Aprovação aciona Platform Event → repriorização no OMS via DigiBee</li>
+            <li>SLA automático com escalação se não aprovado em 4h</li>
+            <li>Audit trail completo: solicitante, justificativa, aprovador, horário</li>
+          </ul>
+        </div>
+        <div class="exc-col">
+          <h4>O que SF entrega</h4>
+          <ul>
+            <li>Critério objetivo (criticidade + prazo da obra)</li>
+            <li>SLA: &lt;24h vs. 3–5 dias atual</li>
+            <li>Repriorização sistêmica no OMS (sem ajuste manual)</li>
+            <li>Audit trail para compliance e auditoria</li>
+          </ul>
+        </div>
+      </div>
+      <div class="exc-foot">
+        <span class="exc-impact">−4 dias médios de aprovação por emergência</span>
+        <span class="exc-foot-tag">= obras desbloqueadas mais rápido, com critério documentado</span>
+      </div>
+    </div>
+
+    <!-- Momento 3: Avaria -->
+    <div class="exc-card">
+      <div class="exc-head">
+        <div class="exc-num">3</div>
+        <div class="exc-head-text">
+          <h3>Gestão de Avaria na Entrega</h3>
+          <p>TMS detecta dano, falta ou inconsistência no momento da entrega — evento gerado automaticamente</p>
+        </div>
+        <div class="exc-trigger">Evento TMS via DigiBee</div>
+      </div>
+      <div class="exc-body">
+        <div class="exc-col">
+          <h4>Sem Salesforce</h4>
+          <ul>
+            <li>Email manual para operação reportando a avaria</li>
+            <li>Registro em Excel de controle de ocorrências</li>
+            <li>Acionamento manual de transportadora e/ou fornecedor</li>
+            <li>Recuperação financeira depende de persistência individual do analista</li>
+            <li>Sem SLA, sem escalação automática, sem histórico consolidado</li>
+          </ul>
+        </div>
+        <div class="exc-col">
+          <h4>Com Salesforce — Case Management</h4>
+          <ul>
+            <li>TMS emite evento via DigiBee → SF abre case automaticamente (sem interação humana)</li>
+            <li>Case categorizado por tipo: dano físico, falta de item, atraso crítico</li>
+            <li>Flow Orchestration notifica transportadora / fornecedor responsável</li>
+            <li>SLA rastreado com escalação automática se não resolvido no prazo</li>
+            <li>Encerramento do case gera registro de crédito / ressarcimento no SAP via DigiBee</li>
+          </ul>
+        </div>
+        <div class="exc-col">
+          <h4>O que SF entrega</h4>
+          <ul>
+            <li>100% das avarias rastreadas (zero perda por esquecimento)</li>
+            <li>SLA contratual com carrier mensurável</li>
+            <li>Recuperação financeira sistematizada</li>
+            <li>Base para negociação de contratos de transportadoras</li>
+          </ul>
+        </div>
+      </div>
+      <div class="exc-foot">
+        <span class="exc-impact">100% das ocorrências rastreadas com SLA e escalação</span>
+        <span class="exc-foot-tag">= recuperação financeira sistematizada · insumo para contratos</span>
+      </div>
+    </div>
+
+    <!-- Momento 4: Escassez -->
+    <div class="exc-card">
+      <div class="exc-head">
+        <div class="exc-num">4</div>
+        <div class="exc-head-text">
+          <h3>Escassez de Estoque — Disputa de Prioridade</h3>
+          <p>OMS detecta que o estoque disponível é insuficiente para atender todas as demandas da fila</p>
+        </div>
+        <div class="exc-trigger">Evento OMS via DigiBee</div>
+      </div>
+      <div class="exc-body">
+        <div class="exc-col">
+          <h4>Sem Salesforce</h4>
+          <ul>
+            <li>Analista percebe escassez no dashboard do OMS</li>
+            <li>Email para Seta pedindo decisão de prioridade</li>
+            <li>Sem estrutura de quais obras priorizar — decisão por "feeling"</li>
+            <li>Risco de favoritismo ou decisão por quem gritou mais alto</li>
+            <li>Delay médio: 2–3 dias para desbloqueio do fluxo</li>
+          </ul>
+        </div>
+        <div class="exc-col">
+          <h4>Com Salesforce — Approval + Flow</h4>
+          <ul>
+            <li>OMS detecta escassez → Platform Event → Case SF via DigiBee</li>
+            <li>SF apresenta contexto estruturado: obras afetadas, criticidade A/B/C, prazo de cada uma</li>
+            <li>Approval flow rotas para analista Seta com dados objetivos</li>
+            <li>Decisão registrada com justificativa obrigatória</li>
+            <li>OMS recebe decisão via DigiBee e continua fluxo automaticamente na sequência aprovada</li>
+          </ul>
+        </div>
+        <div class="exc-col">
+          <h4>O que SF entrega</h4>
+          <ul>
+            <li>Decisão baseada em dados, não em feeling</li>
+            <li>SLA: &lt;4h vs. 2–3 dias atual</li>
+            <li>Audit trail: quem priorizou o quê e por quê</li>
+            <li>Histórico para análise de ruptura recorrente e ação preventiva</li>
+          </ul>
+        </div>
+      </div>
+      <div class="exc-foot">
+        <span class="exc-impact">−2 dias por evento de escassez</span>
+        <span class="exc-foot-tag">= obras desbloqueadas com critério e rastreabilidade total</span>
+      </div>
+    </div>
+
+    <!-- Momento 5: B2B sem API -->
+    <div class="exc-card">
+      <div class="exc-head">
+        <div class="exc-num">5</div>
+        <div class="exc-head-text">
+          <h3>Transportadora B2B sem Integração API</h3>
+          <p>Carrier do fluxo de abastecimento não tem API disponível — agendamento hoje é 100% manual</p>
+        </div>
+        <div class="exc-trigger">B2B · Horizonte 3</div>
+      </div>
+      <div class="exc-body">
+        <div class="exc-col">
+          <h4>Sem Salesforce</h4>
+          <ul>
+            <li>Email ou telefone para agendar coleta com a transportadora</li>
+            <li>Ping-pong: Itaú → Transportadora → AGV → Itaú (janela disponível?)</li>
+            <li>Sem visibilidade de confirmação sistêmica no TMS</li>
+            <li>Risco de janelas de entrega perdidas por falha de comunicação</li>
+            <li>Alta dependência de analistas para follow-up</li>
+          </ul>
+        </div>
+        <div class="exc-col">
+          <h4>Com Salesforce — Experience Cloud</h4>
+          <ul>
+            <li>Carrier acessa portal Experience Cloud com login próprio (via Rainbow/Parcerias)</li>
+            <li>Visualiza pedidos pendentes e janelas disponíveis do AGV em tempo real</li>
+            <li>Confirma agendamento diretamente no portal — sem email, sem telefone</li>
+            <li>SF notifica TMS via DigiBee com confirmação de agendamento</li>
+            <li>Escalável para múltiplos carriers sem custo adicional de integração técnica</li>
+          </ul>
+        </div>
+        <div class="exc-col">
+          <h4>O que SF entrega</h4>
+          <ul>
+            <li>Elimina email ping-pong de agendamento completamente</li>
+            <li>Visibilidade em tempo real para operação no TMS</li>
+            <li>Escalável para novos carriers a custo zero de integração</li>
+            <li>Libera analistas para trabalho de maior valor</li>
+          </ul>
+        </div>
+      </div>
+      <div class="exc-foot">
+        <span class="exc-impact">Zero emails de agendamento para carriers sem API</span>
+        <span class="exc-foot-tag">→ H3 · Requer Rainbow/Parcerias para acesso externo</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. ANTES × DEPOIS -->
+  <section class="section" id="comparativo">
+    <div class="sec-header">
+      <div class="sec-icon red">⚖️</div>
+      <div>
+        <h2>Antes × Depois — O Custo de Não Ter uma Camada de Exceções</h2>
+        <p>O que acontece quando exceções não têm um sistema estruturado para tratá-las</p>
+      </div>
+    </div>
+
+    <div class="ba-card">
+      <div class="ba-title">S&amp;NOI Semanal — Ciclo de Priorização de Abastecimento</div>
+      <div class="ba-body">
+        <div class="ba-before">
+          <div class="ba-label">Sem Salesforce — Como é hoje</div>
+          <div class="ba-step"><div class="ba-dot">1</div><p>OMS processa priorização → resultado exportado como planilha ou PDF</p></div>
+          <div class="ba-step"><div class="ba-dot">2</div><p>Analista envia Excel para Seta por email — sem contexto, sem filtros por obra ou urgência</p></div>
+          <div class="ba-step"><div class="ba-dot">3</div><p>Reunião S&amp;NOI na quarta: disputas levantadas verbalmente, sem registro sistêmico</p></div>
+          <div class="ba-step"><div class="ba-dot">4</div><p>Decisões capturadas em ata de reunião — ninguém integra de volta ao OMS</p></div>
+          <div class="ba-step"><div class="ba-dot">5</div><p>Analista ajusta OMS manualmente com base na ata — sujeito a erros de interpretação</p></div>
+          <div class="ba-metric">Risco: decisões perdidas, ajustes inconsistentes, sem audit trail, sem SLA</div>
+        </div>
+        <div class="ba-after">
+          <div class="ba-label">Com Salesforce — Fluxo Estruturado</div>
+          <div class="ba-step"><div class="ba-dot">1</div><p>OMS envia snapshot de priorização para SF via DigiBee toda segunda-feira</p></div>
+          <div class="ba-step"><div class="ba-dot">2</div><p>SF distribui preview personalizado (por obra, criticidade, prazo) para analistas Seta via Omni-Channel</p></div>
+          <div class="ba-step"><div class="ba-dot">3</div><p>Disputas resolvidas via approval flow SF — decisões registradas com justificativa</p></div>
+          <div class="ba-step"><div class="ba-dot">4</div><p>Aprovação final aciona Platform Event → OMS via DigiBee automaticamente</p></div>
+          <div class="ba-step"><div class="ba-dot">5</div><p>OMS dispara ordens de separação na sexta com base nas decisões aprovadas — sem ajuste manual</p></div>
+          <div class="ba-metric">Resultado: zero email, zero ajuste manual, audit trail completo, SLA rastreado</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ba-card">
+      <div class="ba-title">Exceções Operacionais — Avaria, Demanda Emergencial, Escassez</div>
+      <div class="ba-body">
+        <div class="ba-before">
+          <div class="ba-label">Sem Salesforce — Estado atual</div>
+          <div class="ba-step"><div class="ba-dot">1</div><p>Exceção detectada (avaria / urgência / escassez) → email para operação sem estrutura definida</p></div>
+          <div class="ba-step"><div class="ba-dot">2</div><p>Operação avalia situação via Excel/email — sem contexto centralizado, sem critério objetivo</p></div>
+          <div class="ba-step"><div class="ba-dot">3</div><p>Decisão informal por email ou WhatsApp — sem registro sistêmico, sem prazo</p></div>
+          <div class="ba-step"><div class="ba-dot">4</div><p>Execução manual dos ajustes nos sistemas downstream — propenso a esquecimentos</p></div>
+          <div class="ba-metric">Problema: sem SLA, sem audit trail, decisões por feeling, risco financeiro em avarias não rastreadas</div>
+        </div>
+        <div class="ba-after">
+          <div class="ba-label">Com Salesforce — Case Management + Flows</div>
+          <div class="ba-step"><div class="ba-dot">1</div><p>Evento automático via DigiBee (TMS/OMS) → Case SF criado e categorizado sem interação humana</p></div>
+          <div class="ba-step"><div class="ba-dot">2</div><p>Case com contexto objetivo: criticidade, prazo, impacto financeiro estimado</p></div>
+          <div class="ba-step"><div class="ba-dot">3</div><p>Approval flow com SLA atribuído, responsável notificado via Omni-Channel e escalação automática</p></div>
+          <div class="ba-step"><div class="ba-dot">4</div><p>Decisão registrada → Platform Event → sistemas downstream via DigiBee sem ajuste manual</p></div>
+          <div class="ba-metric">Resultado: SLA rastreado, critério objetivo, recuperação financeira em avarias, zero email para exceções</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. ROI -->
+  <section class="section" id="roi">
+    <div class="sec-header">
+      <div class="sec-icon">💰</div>
+      <div>
+        <h2>ROI Concentrado — Valor nos Momentos Certos</h2>
+        <p>Estimativas baseadas em frequências e tempos levantados na reunião de 15/09 e no diagnóstico de processos</p>
+      </div>
+    </div>
+
+    <div class="table-wrap mb24">
+      <table>
+        <thead>
+          <tr>
+            <th>Caso de Uso</th>
+            <th>Frequência</th>
+            <th>Custo Atual (sem SF)</th>
+            <th>Com Salesforce</th>
+            <th>Benefício Estimado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <strong>S&amp;NOI Semanal</strong><br/>
+              <span style="font-size:11px;color:var(--muted);">Ciclo de aprovação de prioridades de abastecimento</span>
+            </td>
+            <td><span style="font-weight:700;color:var(--blue);">52× / ano</span></td>
+            <td>~4h de setup, emails e ajuste manual / ciclo</td>
+            <td>&lt;1h — SF gerencia distribuição, aprovações e integração com OMS</td>
+            <td><strong style="color:var(--teal);">−156h / ano · zero ajuste manual</strong></td>
+          </tr>
+          <tr>
+            <td>
+              <strong>Demanda Emergencial</strong><br/>
+              <span style="font-size:11px;color:var(--muted);">Aprovação fora do ciclo normal de priorização</span>
+            </td>
+            <td><span style="font-weight:700;color:var(--blue);">Recorrente</span></td>
+            <td>3–5 dias úteis para aprovação informal por email</td>
+            <td>&lt;24h com critério objetivo e escalação automática</td>
+            <td><strong style="color:var(--teal);">−4 dias / aprovação · obras desbloqueadas</strong></td>
+          </tr>
+          <tr>
+            <td>
+              <strong>Avaria na Entrega</strong><br/>
+              <span style="font-size:11px;color:var(--muted);">Ticket automático + workflow com carrier</span>
+            </td>
+            <td><span style="font-weight:700;color:var(--blue);">Por evento TMS</span></td>
+            <td>% não rastreado / não recuperado financeiramente</td>
+            <td>100% rastreado, SLA com carrier, crédito sistematizado no SAP</td>
+            <td><strong style="color:var(--teal);">Recuperação financeira sistematizada</strong></td>
+          </tr>
+          <tr>
+            <td>
+              <strong>Escassez de Estoque</strong><br/>
+              <span style="font-size:11px;color:var(--muted);">Disputa de prioridade com context objetivo</span>
+            </td>
+            <td><span style="font-weight:700;color:var(--blue);">Recorrente</span></td>
+            <td>2–3 dias de email + decisão sem critério</td>
+            <td>&lt;4h com approval flow e contexto de criticidade/prazo</td>
+            <td><strong style="color:var(--teal);">−2 dias / evento · decisão com critério</strong></td>
+          </tr>
+          <tr>
+            <td>
+              <strong>Transportadora sem API (B2B)</strong><br/>
+              <span style="font-size:11px;color:var(--muted);">Portal de agendamento para carriers sem integração</span>
+            </td>
+            <td><span style="font-weight:700;color:var(--blue);">Contínuo · H3</span></td>
+            <td>Email/telefone manual + ping-pong de agendamento</td>
+            <td>Self-service via Experience Cloud sem intervenção humana</td>
+            <td><strong style="color:var(--teal);">Zero emails de agendamento</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="roi-total">
+      <div class="roi-item">
+        <div class="roi-num">−156h</div>
+        <div class="roi-lab">Horas manuais / ano · S&amp;NOI</div>
+      </div>
+      <div class="roi-item">
+        <div class="roi-num">−80%</div>
+        <div class="roi-lab">Tempo de aprovação de exceções</div>
+      </div>
+      <div class="roi-item">
+        <div class="roi-num">100%</div>
+        <div class="roi-lab">Rastreabilidade de avarias</div>
+      </div>
+      <div class="roi-item">
+        <div class="roi-num">0</div>
+        <div class="roi-lab">Emails de agendamento B2B · H3</div>
+      </div>
+    </div>
+
+    <div class="warn-note" style="margin-top:16px;">
+      <strong>Nota sobre os números:</strong> Frequências e tempos estimados com base na reunião de 15/09 e no diagnóstico existente (835 emails/mês observados em 16 meses). Recomendamos um discovery focado com Camila e Gui para refinar as estimativas antes de apresentar formalmente ao cliente.
+    </div>
+  </section>
+
+  <!-- 6. FASEAMENTO -->
+  <section class="section" id="faseamento">
+    <div class="sec-header">
+      <div class="sec-icon">🗓️</div>
+      <div>
+        <h2>Faseamento Realista — Começando pelo Maior Impacto</h2>
+        <p>Três horizontes alinhados com a maturidade do stack AWS e as dependências de habilitação</p>
+      </div>
+    </div>
+
+    <div class="phase-grid mb24">
+      <div class="phase-col">
+        <div class="phase-head h1">
+          <div class="phase-head-sub">Horizonte 1 · 0–6 meses</div>
+          <div class="phase-head-title">Foundation de Exceções</div>
+        </div>
+        <div class="phase-body">
+          <div class="phase-item h1c">
+            <div class="pi-icon">📋</div>
+            <div>
+              <div class="pi-name">S&amp;NOI Workflow</div>
+              <div class="pi-dep">Ciclo semanal de aprovação de prioridades — máximo impacto, footprint SF mínimo</div>
+            </div>
+          </div>
+          <div class="phase-item h1c">
+            <div class="pi-icon">🚨</div>
+            <div>
+              <div class="pi-name">Aprovação de Demanda Emergencial</div>
+              <div class="pi-dep">Case + Approval Flow — desbloqueia obras urgentes com critério objetivo e audit trail</div>
+            </div>
+          </div>
+          <div class="phase-item h1c">
+            <div class="pi-icon">🔗</div>
+            <div>
+              <div class="pi-name">DigiBee Foundation</div>
+              <div class="pi-dep">Conectores OMS ↔ SF via Platform Events para S&amp;NOI e emergências</div>
+            </div>
+          </div>
+          <div style="margin-top:12px;padding:10px;background:#FFF7ED;border-radius:6px;font-size:12px;color:#92400E;">
+            <strong>Pré-requisitos:</strong> OMS em produção (Team Thales) + DigiBee configurado para SF
+          </div>
+        </div>
+      </div>
+
+      <div class="phase-col">
+        <div class="phase-head h2">
+          <div class="phase-head-sub">Horizonte 2 · 6–18 meses</div>
+          <div class="phase-head-title">Gestão de Exceções Ampla</div>
+        </div>
+        <div class="phase-body">
+          <div class="phase-item h2c">
+            <div class="pi-icon">📦</div>
+            <div>
+              <div class="pi-name">Gestão de Avaria (Case Management)</div>
+              <div class="pi-dep">TMS event → Case SF automático com SLA, escalação para carrier e crédito no SAP</div>
+            </div>
+          </div>
+          <div class="phase-item h2c">
+            <div class="pi-icon">⚠️</div>
+            <div>
+              <div class="pi-name">Escassez de Estoque — Approval Flow</div>
+              <div class="pi-dep">OMS detecta ruptura → SF estrutura decisão da Seta com contexto de criticidade e prazo</div>
+            </div>
+          </div>
+          <div class="phase-item h2c">
+            <div class="pi-icon">⚙️</div>
+            <div>
+              <div class="pi-name">Mudança de Parâmetros do Motor</div>
+              <div class="pi-dep">Workflow de aprovação para ajustes nas regras do motor de priorização</div>
+            </div>
+          </div>
+          <div style="margin-top:12px;padding:10px;background:#EFF6FF;border-radius:6px;font-size:12px;color:#1e3a6e;">
+            <strong>Pré-requisitos:</strong> TMS em produção + H1 consolidado com métricas comprovadas
+          </div>
+        </div>
+      </div>
+
+      <div class="phase-col">
+        <div class="phase-head h3">
+          <div class="phase-head-sub">Horizonte 3 · 18+ meses</div>
+          <div class="phase-head-title">Colaboração com Terceiros</div>
+        </div>
+        <div class="phase-body">
+          <div class="phase-item h3c">
+            <div class="pi-icon">🚛</div>
+            <div>
+              <div class="pi-name">Portal Transportadora B2B</div>
+              <div class="pi-dep">Experience Cloud para carriers sem API — self-service de agendamento no fluxo B2B</div>
+            </div>
+          </div>
+          <div class="phase-item h3c">
+            <div class="pi-icon">🏭</div>
+            <div>
+              <div class="pi-name">Portal Fornecedor — Status e Evidência</div>
+              <div class="pi-dep">Fornecedores reportam status de produção e confirmam prazos de entrega</div>
+            </div>
+          </div>
+          <div class="phase-item h3c">
+            <div class="pi-icon">🤖</div>
+            <div>
+              <div class="pi-name">Agentforce — Triagem e Follow-up</div>
+              <div class="pi-dep">Agentes IA para triagem automática de cases e follow-up com fornecedores e carriers</div>
+            </div>
+          </div>
+          <div style="margin-top:12px;padding:10px;background:#F0FDFA;border-radius:6px;font-size:12px;color:#134e4a;">
+            <strong>Pré-requisitos:</strong> Rainbow/Parcerias habilitado + H2 consolidado + dados históricos suficientes
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Recomendação estratégica:</strong> Começar com H1 (S&amp;NOI + Emergências) permite entregar valor mensurável rapidamente com footprint SF mínimo — respeitando a decisão do cliente de manter o core no AWS. O sucesso do H1, com métricas reais de redução de tempo, cria o contexto para expandir para H2 e H3. A expansão cresce junto com a maturidade da plataforma AWS do Thales, não contra ela.
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  Itaú Suprimentos · Blueprint v3.0 · Setembro 2026 · Acesso restrito · Baseado na reunião de 15/09/2026
+</footer>
+
+<script>
+  const SESS_KEY = 'itau_bp_auth';
+  const CRED = { user: 'Salesforce', pass: '2368' };
+
+  function showContent() {
+    document.getElementById('page-content').style.display = '';
+    document.getElementById('page-nav').style.display   = '';
+    document.getElementById('page-main').style.display  = '';
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    if (sessionStorage.getItem(SESS_KEY) === '1') {
+      document.getElementById('login-overlay').classList.add('hidden');
+      showContent();
+    }
+    document.getElementById('login-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const u = document.getElementById('lu').value.trim();
+      const p = document.getElementById('lp').value.trim();
+      if (u === CRED.user && p === CRED.pass) {
+        sessionStorage.setItem(SESS_KEY, '1');
+        document.getElementById('login-overlay').classList.add('hidden');
+        showContent();
+      } else {
+        document.getElementById('lerr').classList.add('show');
+      }
+    });
+
+    const navLinks = document.querySelectorAll('.nav a[href^="#"]');
+    const sections = document.querySelectorAll('.section');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          navLinks.forEach(l => l.classList.remove('active'));
+          const active = document.querySelector(`.nav a[href="#${entry.target.id}"]`);
+          if (active) active.classList.add('active');
+        }
+      });
+    }, { threshold: 0.3 });
+    sections.forEach(s => observer.observe(s));
+  });
+</script>
+</body>
+</html>
