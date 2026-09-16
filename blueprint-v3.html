@@ -182,6 +182,48 @@
     .pi-dep{font-size:11px;color:var(--muted);margin-top:2px;}
 
     footer.footer{background:var(--dark);color:rgba(255,255,255,.5);text-align:center;padding:20px;font-size:12px;}
+
+    /* PRODUCT CARDS */
+    .prod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
+    @media(max-width:900px){.prod-grid{grid-template-columns:1fr;}}
+    .prod-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden;}
+    .prod-head{padding:12px 16px;display:flex;align-items:center;gap:10px;}
+    .prod-head.sf-core{background:linear-gradient(135deg,#001f6b,#003DA5);}
+    .prod-head.sf-int{background:linear-gradient(135deg,#0f766e,#0D9488);}
+    .prod-head.sf-ext{background:linear-gradient(135deg,#7C3AED,#6D28D9);}
+    .prod-head.sf-ai{background:linear-gradient(135deg,#B45309,#D97706);}
+    .prod-icon{font-size:22px;flex-shrink:0;}
+    .prod-name{font-size:13px;font-weight:700;color:white;}
+    .prod-layer{font-size:10px;color:rgba(255,255,255,.65);margin-top:2px;}
+    .prod-body{padding:12px 16px;}
+    .prod-desc{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px;}
+    .prod-uses{display:flex;flex-wrap:wrap;gap:4px;}
+    .prod-use{font-size:10px;padding:2px 8px;border-radius:10px;background:#F3F4F6;color:#374151;font-weight:600;}
+    .prod-use.h1{background:#FFF7ED;color:#92400E;}
+    .prod-use.h2{background:#EFF6FF;color:#1e3a6e;}
+    .prod-use.h3{background:#F5F3FF;color:#5B21B6;}
+    .prod-license{font-size:10px;font-weight:700;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
+
+    /* REFERENCE ARCHITECTURE */
+    .refarch{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden;}
+    .refarch-row{display:grid;gap:0;}
+    .refarch-row.cols3{grid-template-columns:1fr 1fr 1fr;}
+    .refarch-row.cols2{grid-template-columns:1fr 1fr;}
+    .refarch-row.cols1{grid-template-columns:1fr;}
+    .refarch-lane{padding:16px 18px;border-right:1px solid var(--border);}
+    .refarch-lane:last-child{border-right:none;}
+    .refarch-lane-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:10px;}
+    .refarch-box{padding:8px 12px;border-radius:6px;font-size:11px;font-weight:600;margin-bottom:6px;line-height:1.4;}
+    .refarch-box.aws-b{background:#232F3E;color:white;}
+    .refarch-box.dig-b{background:var(--orange);color:white;}
+    .refarch-box.sf-b{background:var(--blue);color:white;}
+    .refarch-box.sf-teal{background:var(--teal);color:white;}
+    .refarch-box.sf-purple{background:#7C3AED;color:white;}
+    .refarch-box.sap-b{background:#003073;color:white;}
+    .refarch-box.gray-b{background:#F3F4F6;color:#374151;border:1px solid #E5E7EB;}
+    .refarch-sep{background:var(--border);height:1px;margin:0;}
+    .refarch-header{background:var(--dark);color:white;padding:12px 18px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;}
+    .refarch-arrow-sep{display:flex;align-items:center;justify-content:center;padding:6px;background:#F8FAFC;border-top:1px dashed var(--border);border-bottom:1px dashed var(--border);font-size:11px;color:var(--muted);gap:8px;}
   </style>
 </head>
 <body>
@@ -226,6 +268,7 @@
 <nav class="nav" id="page-nav" style="display:none;">
   <a href="#diagnostico">Diagnóstico</a>
   <a href="#arquitetura">Arquitetura</a>
+  <a href="#produtos">Produtos SF</a>
   <a href="#excecoes">Os 5 Momentos</a>
   <a href="#comparativo">Antes × Depois</a>
   <a href="#roi">ROI</a>
@@ -378,7 +421,344 @@
     </div>
   </section>
 
-  <!-- 3. OS 5 MOMENTOS -->
+  <!-- 3. PRODUTOS SALESFORCE -->
+  <section class="section" id="produtos">
+    <div class="sec-header">
+      <div class="sec-icon" style="background:#003DA5;">☁️</div>
+      <div>
+        <h2>Produtos Salesforce — Mapa de Capacidades</h2>
+        <p>Quais licenças e módulos SF são necessários · mapeados por caso de uso e horizonte de entrega</p>
+      </div>
+    </div>
+
+    <div class="prod-grid">
+
+      <!-- Service Cloud -->
+      <div class="prod-card">
+        <div class="prod-head sf-core">
+          <div class="prod-icon">🎫</div>
+          <div>
+            <div class="prod-name">Service Cloud</div>
+            <div class="prod-layer">Core Platform · Licença base obrigatória</div>
+          </div>
+        </div>
+        <div class="prod-body">
+          <div class="prod-desc">Plataforma base para gestão de casos, SLA, regras de roteamento e filas de trabalho. Toda a camada de exceção roda sobre Service Cloud — é o fundamento de tudo.</div>
+          <div class="prod-uses">
+            <span class="prod-use h1">Avaria</span>
+            <span class="prod-use h1">Emergência</span>
+            <span class="prod-use h1">S&amp;NOI</span>
+            <span class="prod-use h1">Escassez</span>
+          </div>
+          <div class="prod-license">Licença: Service Cloud · Todos os analistas internos · H1</div>
+        </div>
+      </div>
+
+      <!-- Flow Builder + Flow Orchestration -->
+      <div class="prod-card">
+        <div class="prod-head sf-core">
+          <div class="prod-icon">🔀</div>
+          <div>
+            <div class="prod-name">Flow Builder + Flow Orchestration</div>
+            <div class="prod-layer">Automação e Orquestração · Incluído no Service Cloud</div>
+          </div>
+        </div>
+        <div class="prod-body">
+          <div class="prod-desc">Flow Builder para automações record-triggered e screen flows. Flow Orchestration para processos multi-etapa e multi-ator — o mecanismo central do S&amp;NOI semanal e dos workflows de aprovação.</div>
+          <div class="prod-uses">
+            <span class="prod-use h1">S&amp;NOI (ciclo completo)</span>
+            <span class="prod-use h1">Emergência (approval)</span>
+            <span class="prod-use h2">Escassez</span>
+            <span class="prod-use h2">Parâmetros motor</span>
+          </div>
+          <div class="prod-license">Incluído no Service Cloud · Sem licença adicional · H1</div>
+        </div>
+      </div>
+
+      <!-- Omni-Channel -->
+      <div class="prod-card">
+        <div class="prod-head sf-core">
+          <div class="prod-icon">📡</div>
+          <div>
+            <div class="prod-name">Omni-Channel Routing</div>
+            <div class="prod-layer">Distribuição de Trabalho · Incluído no Service Cloud</div>
+          </div>
+        </div>
+        <div class="prod-body">
+          <div class="prod-desc">Roteamento automático de cases e aprovações para o analista certo com base em skill, disponibilidade e capacidade. Garante que pautas S&amp;NOI e exceções chegam ao responsável sem intervenção manual.</div>
+          <div class="prod-uses">
+            <span class="prod-use h1">S&amp;NOI (distribuição de pautas)</span>
+            <span class="prod-use h1">Avaria (roteamento carrier)</span>
+            <span class="prod-use h2">Todos os cases</span>
+          </div>
+          <div class="prod-license">Incluído no Service Cloud · H1</div>
+        </div>
+      </div>
+
+      <!-- Platform Events -->
+      <div class="prod-card">
+        <div class="prod-head sf-int">
+          <div class="prod-icon">⚡</div>
+          <div>
+            <div class="prod-name">Platform Events</div>
+            <div class="prod-layer">Integração Event-Driven · Incluído no Service Cloud</div>
+          </div>
+        </div>
+        <div class="prod-body">
+          <div class="prod-desc">Bus de eventos dentro do SF e ponto de entrada/saída para integrações via DigiBee. OMS e TMS publicam eventos (escassez, avaria, priorização) e recebem decisões aprovadas. Arquitetura de mensageria desacoplada.</div>
+          <div class="prod-uses">
+            <span class="prod-use h1">OMS → SF (priorização / escassez)</span>
+            <span class="prod-use h1">TMS → SF (avaria)</span>
+            <span class="prod-use h1">SF → OMS (decisão aprovada)</span>
+          </div>
+          <div class="prod-license">Incluído no Service Cloud · Conexão via DigiBee · H1</div>
+        </div>
+      </div>
+
+      <!-- CRM Analytics -->
+      <div class="prod-card">
+        <div class="prod-head sf-int">
+          <div class="prod-icon">📊</div>
+          <div>
+            <div class="prod-name">CRM Analytics (Tableau CRM)</div>
+            <div class="prod-layer">Dashboards e Insights · Licença adicional</div>
+          </div>
+        </div>
+        <div class="prod-body">
+          <div class="prod-desc">Dashboards para gestão do S&amp;NOI (histórico de priorização, padrões de escassez), SLA de avarias, performance de transportadoras. Transforma o histórico de exceções em inteligência operacional.</div>
+          <div class="prod-uses">
+            <span class="prod-use h2">S&amp;NOI histórico</span>
+            <span class="prod-use h2">SLA avarias</span>
+            <span class="prod-use h2">Performance carrier</span>
+            <span class="prod-use h2">Padrões de escassez</span>
+          </div>
+          <div class="prod-license">Licença CRM Analytics adicional · H2</div>
+        </div>
+      </div>
+
+      <!-- Experience Cloud -->
+      <div class="prod-card">
+        <div class="prod-head sf-ext">
+          <div class="prod-icon">🌐</div>
+          <div>
+            <div class="prod-name">Experience Cloud</div>
+            <div class="prod-layer">Portal para Terceiros · Licença adicional · H3</div>
+          </div>
+        </div>
+        <div class="prod-body">
+          <div class="prod-desc">Portal self-service para transportadoras B2B sem API e fornecedores. Acesso externo controlado via Rainbow/Parcerias (gate obrigatório do Itaú). Carriers visualizam pedidos e confirmam agendamentos sem email.</div>
+          <div class="prod-uses">
+            <span class="prod-use h3">Transportadoras B2B sem API</span>
+            <span class="prod-use h3">Fornecedores (status produção)</span>
+          </div>
+          <div class="prod-license">Licença Experience Cloud · Depende Rainbow/Parcerias · H3</div>
+        </div>
+      </div>
+
+      <!-- Agentforce -->
+      <div class="prod-card">
+        <div class="prod-head sf-ai">
+          <div class="prod-icon">🤖</div>
+          <div>
+            <div class="prod-name">Agentforce</div>
+            <div class="prod-layer">IA Agêntica · Licença adicional · H3</div>
+          </div>
+        </div>
+        <div class="prod-body">
+          <div class="prod-desc">Agentes de IA para triagem automática de cases (classificação de avarias, prioridade de emergências) e follow-up autônomo com fornecedores e carriers. Reduz volume de trabalho manual nos analistas de operação.</div>
+          <div class="prod-uses">
+            <span class="prod-use h3">Triagem de cases</span>
+            <span class="prod-use h3">Follow-up fornecedor</span>
+            <span class="prod-use h3">Classificação avaria</span>
+          </div>
+          <div class="prod-license">Licença Agentforce · Dados históricos necessários · H3</div>
+        </div>
+      </div>
+
+      <!-- Approval Processes -->
+      <div class="prod-card">
+        <div class="prod-head sf-core">
+          <div class="prod-icon">✅</div>
+          <div>
+            <div class="prod-name">Approval Processes</div>
+            <div class="prod-layer">Aprovações Estruturadas · Incluído no Service Cloud</div>
+          </div>
+        </div>
+        <div class="prod-body">
+          <div class="prod-desc">Processos de aprovação com roteamento, SLA, escalação automática e múltiplos aprovadores. Utilizado para demandas emergenciais, aprovação de prioridades S&amp;NOI e mudança de parâmetros do motor de priorização.</div>
+          <div class="prod-uses">
+            <span class="prod-use h1">Demanda emergencial</span>
+            <span class="prod-use h1">S&amp;NOI (disputas)</span>
+            <span class="prod-use h2">Parâmetros motor</span>
+          </div>
+          <div class="prod-license">Incluído no Service Cloud · H1</div>
+        </div>
+      </div>
+
+      <!-- Salesforce Connect (OData) -->
+      <div class="prod-card">
+        <div class="prod-head sf-int">
+          <div class="prod-icon">🔗</div>
+          <div>
+            <div class="prod-name">Salesforce Connect / External Objects</div>
+            <div class="prod-layer">Acesso a dados externos em tempo real · Add-on</div>
+          </div>
+        </div>
+        <div class="prod-body">
+          <div class="prod-desc">Para consulta de dados do SAP (pedidos de compra, contratos) e do OMS diretamente na interface SF sem replicar dados. Analistas veem contexto de compras e estoque no mesmo painel do case — sem sair do SF.</div>
+          <div class="prod-uses">
+            <span class="prod-use h2">Contexto SAP no case</span>
+            <span class="prod-use h2">Dados OMS no approval</span>
+          </div>
+          <div class="prod-license">Add-on Salesforce Connect · Avaliar volume de consultas · H2</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Mapa de Licenças por Horizonte -->
+    <div style="background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);border:1px solid var(--border);margin-bottom:24px;">
+      <div style="font-size:13px;font-weight:700;color:var(--dark);margin-bottom:14px;">Mapa de licenças por horizonte de entrega</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+        <div style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px;padding:14px;">
+          <div style="font-size:11px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">H1 · 0–6 meses · Licenças mínimas</div>
+          <ul style="font-size:12px;color:var(--text);line-height:1.8;padding-left:14px;">
+            <li><strong>Service Cloud</strong> — analistas internos (operação, Seta)</li>
+            <li><strong>Flow Orchestration</strong> — incluído</li>
+            <li><strong>Omni-Channel</strong> — incluído</li>
+            <li><strong>Platform Events</strong> — incluído</li>
+            <li><strong>Approval Processes</strong> — incluído</li>
+          </ul>
+          <div style="margin-top:10px;font-size:11px;color:#92400E;font-weight:600;">Apenas uma licença base · máximo impacto</div>
+        </div>
+        <div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:14px;">
+          <div style="font-size:11px;font-weight:700;color:#1e3a6e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">H2 · 6–18 meses · Expansão de capacidades</div>
+          <ul style="font-size:12px;color:var(--text);line-height:1.8;padding-left:14px;">
+            <li><strong>CRM Analytics</strong> — dashboards S&amp;NOI e SLA</li>
+            <li><strong>Salesforce Connect</strong> — contexto SAP/OMS nos cases</li>
+            <li>TMS integration via DigiBee (avaria auto)</li>
+          </ul>
+          <div style="margin-top:10px;font-size:11px;color:#1e3a6e;font-weight:600;">Adicionar Analytics + Connect</div>
+        </div>
+        <div style="background:#F5F3FF;border:1px solid #DDD6FE;border-radius:8px;padding:14px;">
+          <div style="font-size:11px;font-weight:700;color:#5B21B6;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">H3 · 18+ meses · Colaboração externa + IA</div>
+          <ul style="font-size:12px;color:var(--text);line-height:1.8;padding-left:14px;">
+            <li><strong>Experience Cloud</strong> — portal B2B (Rainbow gate)</li>
+            <li><strong>Agentforce</strong> — agentes IA (triagem, follow-up)</li>
+            <li>Member licenses para carriers/fornecedores</li>
+          </ul>
+          <div style="margin-top:10px;font-size:11px;color:#5B21B6;font-weight:600;">Habilitação Rainbow obrigatória antes</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Arquitetura de Referência -->
+    <div style="font-size:14px;font-weight:700;color:var(--dark);margin-bottom:14px;">Arquitetura de referência — fluxo de dados e produtos</div>
+    <div class="refarch">
+      <div class="refarch-header">
+        🏗️ Arquitetura de Referência SF · Camada de Exceções · Itaú Suprimentos
+        <span style="margin-left:auto;font-size:11px;opacity:.6;font-weight:400;">DigiBee como barramento obrigatório em todas as integrações</span>
+      </div>
+
+      <!-- Linha 1: Fontes de eventos -->
+      <div class="refarch-row cols3">
+        <div class="refarch-lane">
+          <div class="refarch-lane-label">Fontes de evento automático</div>
+          <div class="refarch-box aws-b">OMS — Evento: Priorização pronta</div>
+          <div class="refarch-box aws-b">OMS — Evento: Escassez detectada</div>
+          <div class="refarch-box aws-b">TMS — Evento: Avaria na entrega</div>
+        </div>
+        <div class="refarch-lane">
+          <div class="refarch-lane-label">Acionamento manual (humano)</div>
+          <div class="refarch-box gray-b">Fiscal / Seta — Portal de Reservas</div>
+          <div class="refarch-box gray-b">Analista — UI Salesforce (case manual)</div>
+          <div class="refarch-box gray-b">Carrier (H3) — Experience Cloud</div>
+        </div>
+        <div class="refarch-lane">
+          <div class="refarch-lane-label">Sistemas de contexto (leitura)</div>
+          <div class="refarch-box sap-b">SAP — Contratos, pedidos de compra</div>
+          <div class="refarch-box gray-b">EAM / Octagon — Ativos e obras</div>
+          <div class="refarch-box aws-b">OMS — Dados de estoque e criticidade</div>
+        </div>
+      </div>
+
+      <div class="refarch-arrow-sep">
+        <span>↓ eventos e acionamentos chegam via</span>
+        <span style="background:var(--orange);color:white;padding:2px 10px;border-radius:4px;font-weight:700;font-size:11px;">DigiBee API Gateway</span>
+        <span>→ Platform Events do Salesforce ↓</span>
+      </div>
+
+      <!-- Linha 2: Core SF -->
+      <div class="refarch-row cols2">
+        <div class="refarch-lane" style="border-bottom:1px solid var(--border);">
+          <div class="refarch-lane-label">Service Cloud — Gestão de Casos e Routing</div>
+          <div class="refarch-box sf-b">Case Management (avaria, emergência, escassez)</div>
+          <div class="refarch-box sf-b">Omni-Channel — roteamento por skill e fila</div>
+          <div class="refarch-box sf-b">SLA Management — escalação automática</div>
+          <div class="refarch-box sf-b">Approval Processes — demanda emergencial</div>
+        </div>
+        <div class="refarch-lane" style="border-bottom:1px solid var(--border);">
+          <div class="refarch-lane-label">Flow Orchestration — Processos Multi-Ator</div>
+          <div class="refarch-box sf-b">S&amp;NOI Workflow (ciclo 2ª→6ª)</div>
+          <div class="refarch-box sf-b">Distribuição de preview para Seta (terça)</div>
+          <div class="refarch-box sf-b">Captura de decisões com audit trail (quarta)</div>
+          <div class="refarch-box sf-b">Desbloqueio de ordens no OMS (sexta) via Platform Event</div>
+        </div>
+      </div>
+
+      <div class="refarch-row cols2">
+        <div class="refarch-lane">
+          <div class="refarch-lane-label">Platform Events — Barramento interno SF</div>
+          <div class="refarch-box sf-teal">Recebe: OMS_Priorizacao_Pronta</div>
+          <div class="refarch-box sf-teal">Recebe: TMS_Avaria_Detectada</div>
+          <div class="refarch-box sf-teal">Publica: SF_Decisao_Aprovada → DigiBee → OMS</div>
+          <div class="refarch-box sf-teal">Publica: SF_Avaria_Encerrada → DigiBee → SAP</div>
+        </div>
+        <div class="refarch-lane">
+          <div class="refarch-lane-label">Expansões por horizonte</div>
+          <div class="refarch-box sf-teal" style="background:#0f766e;">H2 — CRM Analytics: dashboards S&amp;NOI e SLA</div>
+          <div class="refarch-box sf-teal" style="background:#0f766e;">H2 — Salesforce Connect: contexto SAP/OMS inline</div>
+          <div class="refarch-box sf-purple">H3 — Experience Cloud: portal B2B carriers (Rainbow)</div>
+          <div class="refarch-box sf-purple" style="background:#7C3AED;">H3 — Agentforce: triagem automática + follow-up IA</div>
+        </div>
+      </div>
+
+      <div class="refarch-arrow-sep">
+        <span>↑ decisões aprovadas retornam via</span>
+        <span style="background:var(--orange);color:white;padding:2px 10px;border-radius:4px;font-weight:700;font-size:11px;">DigiBee API Gateway</span>
+        <span>→ OMS (repriorização) · SAP (crédito avaria) · TMS (agendamento)</span>
+      </div>
+
+      <!-- Linha 3: Saídas -->
+      <div class="refarch-row cols3">
+        <div class="refarch-lane">
+          <div class="refarch-lane-label">Output → OMS / TMS (desbloqueio de fluxo)</div>
+          <div class="refarch-box aws-b">OMS recebe decisão S&amp;NOI → dispara ordens sexta</div>
+          <div class="refarch-box aws-b">OMS recebe aprovação emergência → reprioriza</div>
+          <div class="refarch-box aws-b">OMS recebe decisão escassez → continua fluxo</div>
+        </div>
+        <div class="refarch-lane">
+          <div class="refarch-lane-label">Output → SAP (financeiro / contratos)</div>
+          <div class="refarch-box sap-b">SAP recebe crédito/ressarcimento de avaria</div>
+          <div class="refarch-box sap-b">SAP atualiza contrato de transportadora (SLA)</div>
+          <div class="refarch-box gray-b">Dados de auditoria e compliance exportados</div>
+        </div>
+        <div class="refarch-lane">
+          <div class="refarch-lane-label">Output → Terceiros (H3)</div>
+          <div class="refarch-box gray-b">Carrier confirma agendamento via Experience Cloud</div>
+          <div class="refarch-box gray-b">TMS recebe confirmação via DigiBee automaticamente</div>
+          <div class="refarch-box gray-b">Fornecedor atualiza status de produção no portal</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="note" style="margin-top:16px;">
+      <strong>Regra de integração:</strong> Nenhuma integração direta entre SF e os sistemas AWS (OMS, TMS, WMS) ou SAP. Todo tráfego passa pelo <strong>DigiBee</strong> — API Gateway corporativo do Itaú. Isso garante governança centralizada, versionamento de contratos e rastreabilidade de todas as mensagens no padrão do banco.
+    </div>
+  </section>
+
+  <!-- 4. OS 5 MOMENTOS -->
   <section class="section" id="excecoes">
     <div class="sec-header">
       <div class="sec-icon ora">⚡</div>
@@ -662,7 +1042,7 @@
     </div>
   </section>
 
-  <!-- 4. ANTES × DEPOIS -->
+  <!-- 5. ANTES × DEPOIS -->
   <section class="section" id="comparativo">
     <div class="sec-header">
       <div class="sec-icon red">⚖️</div>
@@ -719,7 +1099,7 @@
     </div>
   </section>
 
-  <!-- 5. ROI -->
+  <!-- 6. ROI -->
   <section class="section" id="roi">
     <div class="sec-header">
       <div class="sec-icon">💰</div>
@@ -819,7 +1199,7 @@
     </div>
   </section>
 
-  <!-- 6. FASEAMENTO -->
+  <!-- 7. FASEAMENTO -->
   <section class="section" id="faseamento">
     <div class="sec-header">
       <div class="sec-icon">🗓️</div>
